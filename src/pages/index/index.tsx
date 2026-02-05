@@ -1,9 +1,16 @@
-import { View, Text, Image } from '@tarojs/components'
+
+import { View, Text, Image, Button } from '@tarojs/components'
+import Taro from '@tarojs/taro'
 import './index.scss'
 
 export default function Index() {
   return (
     <View className='index'>
+      {/* 跳转按钮区域 */}
+      <View style={{ margin: '20px 0', display: 'flex', gap: '10px' }}>
+        <Button onClick={() => Taro.navigateTo({ url: '/pages/hotel-list/index' })}>去酒店列表页</Button>
+        <Button onClick={() => Taro.navigateTo({ url: '/pages/hotel-detail/index' })}>去酒店详情页</Button>
+      </View>
       {/* 顶部 Banner */}
       <View className='banner'>
         <Image 

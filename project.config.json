@@ -2,7 +2,7 @@
   "miniprogramRoot": "./dist",
   "projectname": "hotel-app",
   "description": "酒店预定小程序",
-  "appid": "touristappid",
+  "appid": "wxe304a1c25aec3107",
   "setting": {
     "urlCheck": true,
     "es6": false,
