@@ -1,20 +1,38 @@
+import 'reflect-metadata';
 import express, { Request, Response } from 'express';
-import { testConnection } from './config/database';
+import { AppDataSource } from './config/typeorm.config';
+import userRoutes from './routes/user.routes';
+import hotelRoutes from './routes/hotel.routes';
+import roomRoutes from './routes/room.routes';
+import orderRoutes from './routes/order.routes';
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// 中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 基本路由
 app.get('/', (req: Request, res: Response) => {
-  res.json({ message: '酒店后端服务已启动' });
+  res.json({ message: '酒店预定系统兼酒店管理系统后端服务已启动' });
 });
 
-// 启动服务器
-app.listen(PORT, async () => {
-  console.log(`服务器运行在 http://localhost:${PORT}`);
-  // 测试数据库连接
-  await testConnection();
-});
+app.use('/api/users', userRoutes);
+app.use('/api/hotels', hotelRoutes);
+app.use('/api/rooms', roomRoutes);
+app.use('/api/orders', orderRoutes);
+
+const startServer = async () => {
+  try {
+    await AppDataSource.initialize();
+    console.log('数据库连接成功');
+    
+    app.listen(PORT, () => {
+      console.log(`服务器运行在 http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('服务器启动失败:', error);
+    process.exit(1);
+  }
+};
+
+startServer();
