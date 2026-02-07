@@ -138,3 +138,4 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 draft/酒店预定数据库结构设计.md
+/.idea/
