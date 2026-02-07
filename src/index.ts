@@ -1,6 +1,7 @@
 import 'reflect-metadata';
 import express, { Request, Response } from 'express';
 import { AppDataSource } from './config/typeorm.config';
+import { initializeRedis } from './config/redis.config';
 import userRoutes from './routes/user.routes';
 import hotelRoutes from './routes/hotel.routes';
 import roomRoutes from './routes/room.routes';
@@ -23,8 +24,12 @@ app.use('/api/orders', orderRoutes);
 
 const startServer = async () => {
   try {
+    // 初始化数据库连接
     await AppDataSource.initialize();
     console.log('数据库连接成功');
+    
+    // 初始化Redis连接
+    await initializeRedis();
     
     app.listen(PORT, () => {
       console.log(`服务器运行在 http://localhost:${PORT}`);
