@@ -1,5 +1,5 @@
-import { type } from 'os';
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './User';
 
 @Entity('hotel')
 export class Hotel {
@@ -33,6 +33,10 @@ export class Hotel {
   @Column({ name: 'latest_check_out', type: 'time', nullable: true })
   latestCheckOut!: string;
 
-  @Column({ name: 'hotel_region', type: 'tinyint', default: 0 })
-  hotelRegion!: number;
+  @Column({ name: 'user_id', nullable: true })
+  userId!: number;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
 }

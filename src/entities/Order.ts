@@ -9,8 +9,8 @@ export class Order {
   @Column({ name: 'order_number', length: 50, nullable: true })
   orderNumber!: string;
 
-  @Column({ name: 'order_status', length: 20, nullable: true })
-  orderStatus!: string;
+  @Column({ name: 'order_status',type:'tinyint', nullable: false })
+  orderStatus!: number;
 
   @Column({ name: 'order_price', type: 'decimal', precision: 10, scale: 2, nullable: true })
   orderPrice!: number;

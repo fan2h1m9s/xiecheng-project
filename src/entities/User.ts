@@ -30,6 +30,6 @@ export class User {
   @Column({ name: 'last_login_time', type: 'datetime', nullable: true })
   lastLoginTime!: Date;
 
-  @Column({ name: 'user_type', type: 'tinyint', default: 0 })
+  @Column({ name: 'user_type', type: 'tinyint', nullable: false, default: 0 })
   userType!: number;
 }
