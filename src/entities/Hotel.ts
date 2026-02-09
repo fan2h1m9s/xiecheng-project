@@ -1,3 +1,4 @@
+import { type } from 'os';
 import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity('hotel')
@@ -23,9 +24,15 @@ export class Hotel {
   @Column({ name: 'hotel_dis', type: 'text', nullable: true })
   hotelDis!: string;
 
+  @Column({ name: 'hotel_opening_time', type: 'datetime', nullable: true })
+  hotelOpeningTime!: Date;
+
   @Column({ name: 'earliest_check_in', type: 'time', nullable: true })
   earliestCheckIn!: string;
 
   @Column({ name: 'latest_check_out', type: 'time', nullable: true })
   latestCheckOut!: string;
+
+  @Column({ name: 'hotel_region', type: 'tinyint', default: 0 })
+  hotelRegion!: number;
 }
