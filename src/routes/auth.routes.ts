@@ -1,12 +1,15 @@
 import { Router } from 'express';
 import { AuthController } from '../controllers/auth.controller';
-import { requireAuth, requireSystemAdmin, requireHotelAdmin } from '../middleware/auth.middleware';
+import { authenticateJWT, requireAuth, requireSystemAdmin, requireHotelAdmin } from '../middleware/auth.middleware';
 import { UserType } from '../enums/user-type.enum';
 
 const router = Router();
 const authController = new AuthController();
 
-// 登录接口
+// 应用JWT认证中间件到所有认证相关路由
+router.use(authenticateJWT);
+
+// 登录接口（公开）
 router.post('/login', authController.login);
 
 // 获取当前用户信息（需要登录）

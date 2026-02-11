@@ -1,15 +1,28 @@
 import { Router } from 'express';
 import { RoomController } from '../controllers/room.controller';
+import { authenticateJWT, requireHotelOrSystemAdmin } from '../middleware/auth.middleware';
 
 const router = Router();
 const roomController = new RoomController();
 
+// 应用JWT认证中间件
+router.use(authenticateJWT);
+
+// 房间查询 - 公开访问（普通用户可访问）
 router.get('/', roomController.getAllRooms);
 router.get('/:id', roomController.getRoomById);
-router.post('/', roomController.createRoom);
-router.put('/:id', roomController.updateRoom);
-router.delete('/:id', roomController.deleteRoom);
 router.get('/types/all', roomController.getAllRoomTypes);
-router.post('/types', roomController.createRoomType);
+
+// 房间创建 - 需要酒店管理员或系统管理员权限
+router.post('/', requireHotelOrSystemAdmin, roomController.createRoom);
+
+// 房间更新 - 需要酒店管理员或系统管理员权限
+router.put('/:id', requireHotelOrSystemAdmin, roomController.updateRoom);
+
+// 房间删除 - 需要酒店管理员或系统管理员权限
+router.delete('/:id', requireHotelOrSystemAdmin, roomController.deleteRoom);
+
+// 房间类型创建 - 需要酒店管理员或系统管理员权限
+router.post('/types', requireHotelOrSystemAdmin, roomController.createRoomType);
 
 export default router;

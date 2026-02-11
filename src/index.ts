@@ -16,25 +16,12 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 模拟用户登录状态的中间件（实际项目中应该使用 JWT 等方式）
-app.use((req: Request, res: Response, next: NextFunction) => {
-  const authReq = req as AuthenticatedRequest;
-  
-  // 从请求头中获取用户类型，用于测试
-  const userTypeStr = req.headers['x-user-type'];
-  const userAccount = req.headers['x-user-account'] as string;
-  
-  if (userTypeStr && userAccount) {
-    const userType = parseInt(userTypeStr as string);
-    authReq.user = {
-      id: 1,
-      userType: userType as UserType,
-      userAccount
-    };
-  }
-  
-  next();
-});
+// JWT认证中间件
+import { authenticateJWT } from './middleware/auth.middleware';
+
+// 应用JWT认证中间件（可选，根据需要在特定路由使用）
+// 这里不全局应用，而是在需要认证的路由上单独使用
+// 这样可以保持公开接口的可访问性
 
 app.get('/', (req: Request, res: Response) => {
   res.json({ message: '酒店后端服务已启动' });
