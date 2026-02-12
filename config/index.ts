@@ -1,10 +1,11 @@
 import { defineConfig, type UserConfigExport } from '@tarojs/cli'
-import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
+//import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
 import devConfig from './dev'
 import prodConfig from './prod'
 
 // https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
-export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+// export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  export default defineConfig<'webpack5'>(async (merge) => {
   const baseConfig: UserConfigExport<'webpack5'> = {
     projectName: 'hotel-app',
     date: '2026-2-5',
@@ -34,25 +35,39 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
       enable: false // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
     },
     mini: {
-      postcss: {
-        pxtransform: {
-          enable: true,
-          config: {
-
-          }
-        },
-        cssModules: {
-          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
-          config: {
-            namingPattern: 'module', // 转换模式，取值为 global/module
-            generateScopedName: '[name]__[local]___[hash:base64:5]'
-          }
-        }
-      },
-      webpackChain(chain) {
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
-      }
+  postcss: {
+    pxtransform: {
+      enable: true,
+      config: {}
     },
+    cssModules: {
+      enable: false,
+      config: {
+        namingPattern: 'module',
+        generateScopedName: '[name]__[local]___[hash:base64:5]'
+      }
+    }
+  },
+  commonChunks: ['runtime', 'vendors', 'taro', 'common'],
+  optimizeMainPackage: {
+    enable: true
+  },
+  webpackChain(chain, webpack) {
+    // 移除可能导致问题的 external 配置
+    chain.externals({})
+    
+    // 确保模块解析正确
+    chain.resolve.mainFields
+      .clear()
+      .add('browser')
+      .add('module')
+      .add('main')
+      
+    // 添加模块解析扩展名
+    chain.resolve.extensions
+      .merge(['.js', '.jsx', '.ts', '.tsx', '.json'])
+  }
+},
     h5: {
       publicPath: '/',
       staticDirectory: 'static',
@@ -79,7 +94,7 @@ export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
         }
       },
       webpackChain(chain) {
-        chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+        //chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
       }
     },
     rn: {

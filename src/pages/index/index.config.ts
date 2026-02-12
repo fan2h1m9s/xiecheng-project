@@ -1,5 +1,5 @@
 export default {
-  navigationBarTitleText: '酒店预订',
+  navigationBarTitleText: '易宿酒店预订平台',
   enablePullDownRefresh: false,
   backgroundTextStyle: 'dark'
 }
