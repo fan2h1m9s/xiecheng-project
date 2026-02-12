@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { User } from './User';
+import { RoomType } from './RoomType';
 
 @Entity('hotel')
 export class Hotel {
@@ -45,4 +46,7 @@ export class Hotel {
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
   user!: User;
+
+  @OneToMany(() => RoomType, roomType => roomType.hotel)
+  roomTypes!: RoomType[];
 }

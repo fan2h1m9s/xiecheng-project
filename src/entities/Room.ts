@@ -12,8 +12,8 @@ export class Room {
   @Column({ name: 'room_name', length: 100, nullable: true })
   roomName!: string;
 
-  @Column({ name: 'room_status', length: 20, nullable: true })
-  roomStatus!: string;
+  @Column({ name: 'room_status', type:'tinyint', nullable: true })
+  roomStatus!: number;
 
   @Column({ name: 'room_type_id', nullable: true })
   roomTypeId!: number;
