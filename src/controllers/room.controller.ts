@@ -81,4 +81,23 @@ export class RoomController {
       res.status(500).json({ error: '创建房间类型失败' });
     }
   };
-}
+
+  getAvailableRooms = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const availableRooms = await this.roomService.findAvailableRooms();
+      res.json(availableRooms);
+    } catch (error) {
+      res.status(500).json({ error: '获取可用房间失败' });
+    }
+  };
+
+  getRoomsByHotel = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const hotelId = parseInt(req.params.hotelId as string);
+      const rooms = await this.roomService.findRoomsByHotel(hotelId);
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ error: '获取酒店房间失败' });
+    }
+  };
+} 

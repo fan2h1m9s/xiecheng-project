@@ -50,4 +50,20 @@ export class RoomService {
     const roomType = this.roomTypeRepository.create(roomTypeData);
     return this.roomTypeRepository.save(roomType);
   }
-}
+
+  async findAvailableRooms(): Promise<Room[]> {
+    return this.roomRepository.find({
+      where: { roomStatus: '空闲' },
+      relations: ['roomType'],
+    });
+  }
+
+  async findRoomsByHotel(hotelId: number): Promise<Room[]> {
+    // 这里需要根据实际的酒店-房间关联关系进行查询
+    // 假设Room实体中有hotelId字段
+    return this.roomRepository.find({
+      where: { /* hotelId: hotelId */ },
+      relations: ['roomType'],
+    });
+  }
+} 
