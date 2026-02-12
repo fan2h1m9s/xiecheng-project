@@ -1,0 +1,515 @@
+// ==================== 页面整体布局样式 ====================
+.hotel-list-page {
+  height: 100vh;                    // 页面占满整个视口高度
+  display: flex;                    // 使用弹性布局
+  flex-direction: column;           // 垂直排列子元素
+  background-color: #f7f7f7;        // 页面背景色
+}
+
+// ==================== 页面头部区域样式 ====================
+.hotel-list-header {
+  position: sticky;                 // 固定定位
+  top: 0;                          // 距离顶部0像素
+  background: #f2f2f2;             // 与筛选页一致的背景
+  z-index: 10;                     // 层级较高，避免被遮挡
+  padding: 0;                      // 取消内边距
+  box-shadow: none;                // 取消阴影
+  display: flex;                   // 弹性布局
+  flex-direction: column;          // 垂直排列子元素
+}
+
+.searchRow {
+  display: flex;
+  flex-direction: row;
+  gap: 20rpx;
+  margin: 24rpx 26rpx 0;
+  align-items: stretch;
+}
+
+.searchLeft {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 20rpx;
+}
+
+.infoCard,
+.searchCard {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e3e3e3;
+  padding: 16rpx 18rpx;
+  box-sizing: border-box;
+}
+
+.infoCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.infoLine {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.infoLabel {
+  font-size: 22rpx;
+  color: #999;
+}
+
+.infoValue {
+  font-size: 24rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.searchCard {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.searchPlaceholder {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.mapButton {
+  width: 120rpx;
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #fd7a33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mapIcon {
+  font-size: 26rpx;
+  color: #fd7a33;
+  font-weight: 600;
+}
+
+.headerRow {
+  display: flex;
+  flex-direction: row;
+  gap: 20rpx;
+  margin: 20rpx 26rpx 0;
+}
+
+.sortButton {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  background: white;
+  border: 1rpx solid #dedede;
+  border-radius: 12rpx;
+  text-align: center;
+  box-sizing: border-box;
+  color: #333;
+
+  &.active {
+    border-color: #fd7a33;
+    color: #fd7a33;
+  }
+}
+
+.filterButton {
+  border-color: #fd7a33;
+  color: #fd7a33;
+}
+
+.sortLabel {
+  font-size: 28rpx;
+}
+
+// ==================== 卡片下方信息面板样式 ====================
+.infoPanelRow {
+  margin: 12rpx 26rpx 0;
+}
+
+.infoCardPanel {
+  background: #ffffff;
+  padding: 20rpx 18rpx 22rpx;
+  border-radius: 16rpx;
+  border: 1rpx solid #e3e3e3;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.08);
+  animation: infoDropDown 0.18s ease-out;
+}
+
+.info-panel-line {
+  font-size: 26rpx;
+  color: #333;
+  margin-top: 12rpx;
+}
+
+.info-panel-line:first-child {
+  margin-top: 0;
+}
+
+@keyframes infoDropDown {
+  from {
+    transform: translateY(-8rpx);
+    opacity: 0.6;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+// ==================== 需求快捷编辑弹窗 ====================
+.guest-overlay {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 1200;
+}
+
+.guest-backdrop {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.35);
+}
+
+.guest-panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #ffffff;
+  border-top-left-radius: 16rpx;
+  border-top-right-radius: 16rpx;
+  padding: 24rpx 26rpx 20rpx;
+  animation: guestSlideUp 0.2s ease-out;
+}
+
+.guest-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+
+.guest-row:last-child {
+  border-bottom: none;
+}
+
+.guest-label {
+  font-size: 26rpx;
+  color: #333;
+}
+
+.guest-stepper {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.stepper-btn {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 8rpx;
+  border: 1rpx solid #dedede;
+  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28rpx;
+}
+
+.stepper-btn.disabled {
+  color: #bbb;
+  border-color: #eee;
+}
+
+.stepper-value {
+  min-width: 32rpx;
+  text-align: center;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.guest-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 18rpx;
+}
+
+.guest-cancel,
+.guest-confirm {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  border-radius: 16rpx;
+  text-align: center;
+  font-size: 28rpx;
+}
+
+.guest-cancel {
+  background: #ffffff;
+  border: 1rpx solid #dedede;
+  color: #333;
+}
+
+.guest-confirm {
+  background: #fd7a33;
+  color: #fff;
+}
+
+@keyframes guestSlideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// ==================== 页面内容区域样式 ====================
+.hotel-list-content {
+  flex: 1;                         // 占据剩余空间
+  overflow-y: auto;                // 垂直滚动
+  padding: 16px;                   // 内边距
+  background: #f7f7f7;             // 背景色
+}
+
+// ==================== 酒店列表项样式 ====================
+.hotel-item {
+  background: #fff;                // 白色背景
+  border-radius: 8px;              // 圆角
+  margin-bottom: 12px;             // 底部外边距
+  padding: 16px;                   // 内边距
+  box-shadow: 0 1px 4px rgba(0,0,0,0.03); // 阴影效果
+  display: flex;                   // 弹性布局
+  align-items: flex-start;         // 顶部对齐
+  gap: 12px;                       // 图片与信息间距
+  transition: all 0.2s ease;       // 过渡动画
+  
+  &:active {                       // 按下状态
+    transform: scale(0.98);        // 轻微缩小
+    background-color: #f0f8ff;     // 浅蓝背景
+  }
+}
+
+.hotel-thumb {
+  width: 180rpx;
+  height: 180rpx;
+  border-radius: 10rpx;
+  background: #f0f0f0;
+  flex-shrink: 0;
+}
+
+.hotel-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8rpx;
+}
+
+.hotel-name {
+  font-size: 30rpx;
+  color: #222;
+  font-weight: 600;
+}
+
+.hotel-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6rpx;
+  font-size: 24rpx;
+  color: #666;
+}
+
+.hotel-rating {
+  color: #ff7a2f;
+  font-weight: 600;
+}
+
+.hotel-divider {
+  color: #ccc;
+  margin: 0 6rpx;
+}
+
+.hotel-location {
+  font-size: 24rpx;
+  color: #666;
+}
+
+.hotel-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.hotel-tag {
+  font-size: 22rpx;
+  color: #3a7afe;
+  background: #edf4ff;
+  padding: 4rpx 10rpx;
+  border-radius: 16rpx;
+}
+
+.hotel-price {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 90rpx;
+}
+
+.price-number {
+  font-size: 32rpx;
+  color: #ff6f06;
+  font-weight: 700;
+}
+
+.price-desc {
+  font-size: 22rpx;
+  color: #999;
+}
+
+// ==================== 筛选面板相关样式 ====================
+
+// 筛选面板覆盖层
+.filter-overlay {
+  position: fixed;                 // 固定定位
+  top: 0;                         // 覆盖全屏
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;                  // 最高层级
+}
+
+// 半透明背景遮罩
+.filter-backdrop {
+  position: absolute;             // 绝对定位
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5); // 半透明黑色
+}
+
+// 筛选面板主体
+.filter-panel {
+  position: absolute;             // 绝对定位
+  bottom: 0;                      // 从底部弹出
+  left: 0;
+  right: 0;
+  background: white;              // 白色背景
+  border-top-left-radius: 12px;   // 顶部圆角
+  border-top-right-radius: 12px;
+  max-height: 70%;                // 最大高度70%
+  display: flex;                  // 弹性布局
+  flex-direction: column;         // 垂直排列
+}
+
+// 筛选内容区域
+.filterContent {
+  flex: 1;                        // 占据可用空间
+  overflow-y: auto;               // 垂直滚动
+  padding: 20rpx 0;               // 垂直内边距
+}
+
+// ==================== 设置项样式（模仿微信小程序） ====================
+.settingItem {
+  display: flex;                  // 弹性布局
+  width: 100%;                    // 宽度100%
+  box-sizing: border-box;         // 盒模型
+  flex-direction: row;            // 水平排列
+  background: white;              // 白色背景
+  border-bottom: #dedede solid 1px; // 底部边框
+  padding: 30rpx 26rpx;           // 内边距
+  align-items: center;            // 垂直居中
+  
+  &.selected {                    // 选中状态
+    .caption {                    // 标题文字
+      color: #007AFF;             // 蓝色
+    }
+    .value {                      // 值文字
+      color: #007AFF;             // 蓝色
+    }
+  }
+  
+  &:active {                      // 按下状态
+    background: #f8f8f8;          // 浅灰背景
+  }
+}
+
+// 设置项标题
+.caption {
+  font-size: 30rpx;               // 字体大小
+  color: #333;                    // 深灰色文字
+  flex-shrink: 0;                 // 不收缩
+}
+
+// 值容器
+// 设置项值
+.value {
+  font-size: 30rpx;               // 字体大小
+  color: #333;                    // 深灰色文字
+  flex: 1;                        // 占据剩余空间
+  text-align: right;              // 右对齐
+}
+
+// 图标样式
+.icon {
+  width: 0;                       // 宽度为0，绘制三角形
+  height: 0;                      // 高度为0
+  margin-left: 10rpx;             // 左边距
+  border-left: 10rpx solid transparent;
+  border-right: 10rpx solid transparent;
+  border-top: 12rpx solid #999;
+}
+
+// ==================== 筛选操作按钮样式 ====================
+.filterMenu {
+  width: 100%;
+  height: 100rpx;
+  display: flex;
+  flex-direction: row;
+  margin-top: 60rpx;
+}
+
+// 清除按钮
+.filterMenu .clear {
+  flex: 1;                        // 平均分配宽度
+  height: 100rpx;                 // 高度
+  line-height: 100rpx;            // 行高（垂直居中）
+  font-size: 28rpx;               // 字体大小
+  box-sizing: border-box;         // 盒模型
+  border-radius: 16rpx;           // 圆角
+  text-align: center;             // 文字居中
+  margin: 30rpx;
+  color: #333;                    // 深灰色文字
+  border: 1rpx solid #ff6f06;     // 橙色边框
+  background: white;              // 白色背景
+}
+
+// 确认按钮
+.filterMenu .confirm {
+  flex: 1;                        // 平均分配宽度
+  height: 100rpx;                 // 高度
+  line-height: 100rpx;            // 行高
+  font-size: 28rpx;               // 字体大小
+  box-sizing: border-box;         // 盒模型
+  border-radius: 16rpx;           // 圆角
+  text-align: center;             // 文字居中
+  margin: 30rpx;
+  color: white;                   // 白色文字
+  background: #fd7a33;            // 橙色背景
+}
+
+// ==================== 当前筛选条件显示样式 ====================

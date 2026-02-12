@@ -1,0 +1,3 @@
+export const TENCENT_MAP_KEY = 'V57BZ-S6LK4-3ZWUT-FW337-FT2PK-TFBWZ'
+export const TENCENT_MAP_SK = 'yIT2pfnD2KN0An4xgZk6HLxj4rdSmCUK'
+export const AMAP_KEY = 'f797b890e4324fcb4f7d7e2dab927978'
