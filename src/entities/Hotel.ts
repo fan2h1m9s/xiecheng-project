@@ -33,6 +33,12 @@ export class Hotel {
   @Column({ name: 'latest_check_out', type: 'time', nullable: true })
   latestCheckOut!: string;
 
+  @Column({ name: 'hotel_status', type: 'tinyint', nullable: true })
+  hotelStatus!: number;
+
+  @Column({ name: 'hotel_remark', type: 'text', nullable: true })
+  hotelRemark!: string;
+
   @Column({ name: 'user_id', nullable: true })
   userId!: number;
 
