@@ -1,0 +1,82 @@
+<!--pages/homePage/homePage.wxml-->
+<swiper class='homeHeader' indicator-dots autoplay interval='3000' circular skip-hidden-item-layout>
+     <swiper-item class='swiper' wx:for="{{homeAdvertises}}" wx:key="index">
+          <image src='{{item}}' mode='aspectFill' class='swiper' bindtap='homeAdvertisesTap' data-index='{{index}}'></image>
+     </swiper-item>
+</swiper>
+
+<view class='filterContent'>
+     <view class='filterView'>
+          <view class='location'>
+               <text class='city' bindtap='selectCity' data-city="{{location}}">{{location}}</text>
+               <view bindtap='selectCity'>
+                <text class="my-location">我的位置</text>
+                <image src='../../res/images/ic_city_location.png' mode='aspectFit' class='icon' bindtap='getLocalLocation' />
+               </view>
+          </view>
+          <!-- <view class='location'>
+               <view class='filter' bindtap='filterTap'>
+                    <image src='../../res/images/ic_filter.png' mode='widthFix' class='icon' />
+                    <text class='text'>筛选</text>
+               </view>
+               <view style='color:#ccc;text-align: center;'>|
+               </view>
+               <view class='filter' bindtap='nearbyTap'>
+                    <image src='../../res/images/ic_nearby.png' mode='widthFix' class='icon' />
+                    <text class='text'>我的附近</text>
+               </view>
+          </view> -->
+
+          <!-- <view class='divideItem'>
+               <text class='divideText'><text class='week'>{{startWeek}}</text>入住</text>
+               <text class='divideText'><text class='week'>{{endWeek}}</text>离店</text>
+          </view> -->
+
+          <!-- 日期计算  -->
+          <view class='dateContent'>
+               <view class='dateItem'>
+                    <picker class='date' mode="date" value="{{startDate}}" start="{{currentDate}}" end="{{endOfStartDate}}" bindchange="startDateChange">
+                         <view class='date'>
+                          <view class='divideText'><text class='week'>{{startWeek}}</text>入住</view>
+                              <view class='day'>{{startDay}}</view>
+                              <view class='monthWeek'>
+                                   <text class='month'>{{startYear}}/{{startMonth}}</text>
+                              </view>
+                         </view>
+                    </picker>
+               </view>
+               <text class='dayCount'>共{{dayCount}}晚</text>
+               <view class='dateItem'>
+                    <picker class='date' mode="date" value="{{endDate}}" start="{{startDate}}" end="{{endOfEndDate}}" bindchange="endDateChange">
+                         <view class='date'>
+                          <view class='divideText'><text class='week'>{{endWeek}}</text>离店</view>
+                              <view class='day'>{{endDay}}</view>
+                              <view class='monthWeek'>
+                                   <text class='month'>{{endYear}}/{{endMonth}}</text>
+                              </view>
+                         </view>
+                    </picker>
+               </view>
+          </view>
+          <!-- 日期end  -->
+
+          <!-- 搜索条件 -->
+          <view class='section-search'>
+            <input class="home-input"  maxlength="100" bindinput="bindKeyInput" placeholder="搜索关键字/酒店名称"/>
+          </view>
+          <view class='commonBtn' hover-class='commonBtnHover' bindtap='searchEvent' hover-stay-time='100'>预订酒店</view>
+     </view>
+</view>
+
+<!-- 更多服务 -->
+<view class="more">
+  <view class="more-title">更多服务</view>
+  <view class="vip">
+    <image class="vip-img" src='../../res/images/vip.png' mode='aspectFit' bindtap='getLocalLocation' />
+  </view>
+</view>
+
+<!-- 城市弹框 -->
+<view class="section-select-city" wx:if="{{isShowSelectCity}}">
+  <SelectCitiesView bind:citySelect='onCitySelect' bind:close='onCityClose' allCities="{{cityList}}" currentLocation='{{currentLocation}}' city='{{currentCity}}'></SelectCitiesView>
+</view>

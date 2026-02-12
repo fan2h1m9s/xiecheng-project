@@ -1,0 +1,212 @@
+/* pages/homePage/homePage.wxss */
+
+Page {
+     width: 100%;
+     height: 100%;
+}
+
+.homeHeader {
+     width: 100%;
+     height: 400rpx;
+}
+
+.homeHeader .swiper {
+     width: 100%;
+     height: 100%;
+}
+
+.homeHeader .wx-swiper-dots.wx-swiper-dots-horizontal {
+     margin-bottom: 85rpx;
+}
+
+.homeHeader .wx-swiper-dot {
+     width: 40rpx;
+     display: inline-flex;
+     height: 10rpx;
+     /* margin-left: 20rpx; */
+     justify-content: space-between;
+}
+
+.homeHeader .wx-swiper-dot::before {
+     content: '';
+     flex-grow: 1;
+     background: white;
+     border-radius: 8rpx;
+}
+
+.homeHeader .wx-swiper-dot-active::before {
+     background: #f66e26;
+}
+
+.filterContent {
+    position: relative;
+     width: 100%;
+     box-sizing: border-box;
+     top: -50rpx;
+     padding: 0 28rpx;
+}
+
+.filterView {
+     display: flex;
+     flex-direction: column;
+     box-sizing: border-box;
+     height: max-content;
+     width: 100%;
+     box-shadow: 0rpx 8rpx 20rpx #bbb;
+     border-radius: 14rpx;
+     background: white;
+     padding: 0 40rpx;
+}
+
+.location {
+     width: 100%;
+     height: max-content;
+     box-sizing: border-box;
+     padding: 22rpx 0;
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+     border-bottom: 1rpx solid #eee;
+}
+
+.commonBtn{
+  padding: 20rpx 0;
+  margin: 30rpx 0;
+}
+
+.location .my-location{
+  font-size: 24rpx;
+  margin-right: 10rpx;
+}
+
+.location .icon {
+     width: 24rpx;
+     height: 24rpx;
+}
+
+.location .caption, .location .city, .location .filter .text {
+     font-size: 32rpx;
+     margin-left: 14rpx;
+}
+
+.location .city {
+     flex: 1;
+}
+
+.location .filter {
+     display: flex;
+     flex-direction: row;
+     flex: 1;
+     justify-content: center;
+     align-items: center;
+}
+
+.location .filter .icon {
+     width: 34rpx;
+}
+
+.divideItem {
+     box-sizing: border-box;
+     width: 100%;
+     background: white;
+     padding: 24rpx 0 0 0;
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+}
+
+.divideText {
+     flex: 1;
+     text-align: center;
+     font-size: 22rpx;
+}
+
+.section-search{
+  border-bottom: 1rpx solid #eee;
+  font-size: 24rpx;
+}
+
+.section-search .home-input{
+  padding: 20rpx 0;
+}
+
+.dateContent {
+     width: 100%;
+     height: max-content;
+     display: flex;
+     flex-direction: row;
+     padding: 20rpx 10rpx 26rpx;
+     box-sizing: border-box;
+     align-items: center;
+     border-bottom: 1rpx solid #eee;
+}
+
+.dateItem {
+     flex: 1;
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+     position: relative;
+}
+
+.dateItem .date {
+     /* display: flex;
+     flex-direction: row; */
+     margin: 0 auto;
+}
+
+.dateItem .date .day {
+     height: fit-content;
+     font-size: 56rpx;
+     color: #ee6715;
+     text-align: center;
+}
+
+.dateItem .date .monthWeek {
+     height: fit-content;
+     display: flex;
+     flex-direction: column;
+     margin-left: 6rpx;
+}
+
+.dateItem .date .monthWeek .week, .dateItem .date .monthWeek .month {
+     flex: 1;
+     font-size: 22rpx;
+}
+
+.dayCount {
+     font-size: 22rpx;
+     margin: 0 10rpx;
+     letter-spacing: 10rpx;
+     border-radius: 50rpx;
+     border: 1px solid #e7e7e7;
+     padding: 10rpx 24rpx;
+}
+.section-select-city{
+  position: fixed;
+  bottom: 0;
+  height: 80%;
+  width: 100%;
+  z-index: 100;
+  background-color: #ffffff;
+}
+
+.more{
+  padding: 0 20rpx 0 30rpx ;
+  margin-top: -20rpx;
+}
+.more-title{
+  font-size: 36rpx;
+  color: #000000;
+  font-weight: 600;
+}
+.vip{
+  display: inline-block;
+  width: 100%;
+  height: 100px;
+}
+.vip-img{
+  width: 100%;
+  height: 100%;
+}
+

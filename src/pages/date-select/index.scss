@@ -1,0 +1,45 @@
+.date-select-page {
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding: 24rpx 26rpx;
+  box-sizing: border-box;
+}
+
+.date-card {
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e3e3e3;
+  padding: 24rpx;
+  box-sizing: border-box;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12rpx 0;
+}
+
+.date-label {
+  font-size: 26rpx;
+  color: #666;
+}
+
+.date-value {
+  font-size: 28rpx;
+  color: #222;
+  font-weight: 600;
+}
+
+.date-summary {
+  margin-top: 12rpx;
+  font-size: 26rpx;
+  color: #333;
+}
+
+.date-confirm {
+  margin-top: 24rpx;
+  background: #fd7a33;
+  color: #fff;
+  border-radius: 16rpx;
+}

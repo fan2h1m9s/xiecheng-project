@@ -1,0 +1,30 @@
+.city-select-page {
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding: 24rpx 26rpx;
+  box-sizing: border-box;
+}
+
+.city-list {
+  background: #ffffff;
+  border-radius: 16rpx;
+  border: 1rpx solid #e3e3e3;
+  overflow: hidden;
+}
+
+.city-item {
+  padding: 24rpx 20rpx;
+  font-size: 28rpx;
+  color: #333;
+  border-bottom: 1rpx solid #efefef;
+}
+
+.city-item:last-child {
+  border-bottom: none;
+}
+
+.city-item.active {
+  color: #fd7a33;
+  font-weight: 600;
+  background: #fff6f0;
+}
