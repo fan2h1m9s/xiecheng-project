@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { UserService } from '../services/user.service';
 import { UserType } from '../enums/user-type.enum';
 import { AuthenticatedRequest } from '../middleware/auth.middleware';
+import { PasswordUtil } from '../utils/password.util';
+import { JwtUtil } from '../utils/jwt.util';
+import { RedisUtil } from '../utils/redis.util';
 
 export class AuthController {
   private userService: UserService;
@@ -17,32 +20,54 @@ export class AuthController {
     try {
       const { userAccount, userPassword } = req.body;
       
-      // 简单的用户验证（实际项目中应该使用密码加密）
-      const user = await this.userService.findByAccount(userAccount);
-      
-      if (user && user.userPassword === userPassword) {
-        // 模拟登录成功，将用户信息存储在请求对象中
-        // 实际项目中应该使用 JWT 等方式
-        const authReq = req as AuthenticatedRequest;
-        authReq.user = {
-          id: user.id!,
-          userType: user.userType as UserType,
-          userAccount: user.userAccount!
-        };
-        
-        res.json({ 
-          success: true, 
-          message: '登录成功',
-          user: {
-            id: user.id,
-            userAccount: user.userAccount,
-            userName: user.userName,
-            userType: user.userType
-          }
-        });
-      } else {
-        res.status(401).json({ success: false, message: '用户名或密码错误' });
+      // 验证参数
+      if (!userAccount || !userPassword) {
+        res.status(400).json({ success: false, message: '账号和密码不能为空' });
+        return;
       }
+
+      // 查找用户
+      const user = await this.userService.findByAccount(userAccount);
+      if (!user) {
+        res.status(401).json({ success: false, message: '用户名或密码错误' });
+        return;
+      }
+      
+      // 验证密码
+      const isValidPassword = await PasswordUtil.verifyPassword(userPassword, user.userPassword);
+      if (!isValidPassword) {
+        res.status(401).json({ success: false, message: '用户名或密码错误' });
+        return;
+      }
+
+      // 更新最后登录时间
+      await this.userService.updateLastLoginTime(user.id!);
+
+      // 生成JWT令牌
+      const token = JwtUtil.generateToken({ userId: user.id!, userAccount: user.userAccount! });
+
+      // 存储到Redis
+      await RedisUtil.storeUserSession(user.id!, token);
+
+      // 将用户信息存储在请求对象中
+      const authReq = req as AuthenticatedRequest;
+      authReq.user = {
+        id: user.id!,
+        userType: user.userType as UserType,
+        userAccount: user.userAccount!
+      };
+      
+      res.json({ 
+        success: true, 
+        message: '登录成功',
+        user: {
+          id: user.id,
+          userAccount: user.userAccount,
+          userName: user.userName,
+          userType: user.userType
+        },
+        token
+      });
     } catch (error) {
       res.status(500).json({ success: false, message: '登录失败' });
     }
@@ -64,9 +89,32 @@ export class AuthController {
   /**
    * 用户登出
    */
-  logout = (req: Request, res: Response): void => {
-    const authReq = req as AuthenticatedRequest;
-    authReq.user = undefined;
-    res.json({ success: true, message: '登出成功' });
+  logout = async (req: Request, res: Response): Promise<void> => {
+    try {
+      // 从请求头获取令牌
+      const token = req.headers.authorization?.replace('Bearer ', '');
+      if (!token) {
+        res.status(401).json({ success: false, message: '未提供令牌' });
+        return;
+      }
+
+      // 验证令牌
+      const decoded = JwtUtil.verifyToken(token);
+      if (!decoded || !decoded.userId) {
+        res.status(401).json({ success: false, message: '无效的令牌' });
+        return;
+      }
+
+      // 从Redis中删除会话
+      await RedisUtil.removeUserSession(decoded.userId);
+
+      // 清除请求对象中的用户信息
+      const authReq = req as AuthenticatedRequest;
+      authReq.user = undefined;
+
+      res.json({ success: true, message: '登出成功' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: '登出失败' });
+    }
   };
 }

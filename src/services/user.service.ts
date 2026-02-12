@@ -31,6 +31,11 @@ export class UserService {
         throw new Error('账号已存在');
       }
 
+      // 验证用户类型，禁止创建系统管理员账号
+      if (userData.userType === 2) {
+        throw new Error('禁止创建系统管理员账号');
+      }
+
       // 生成锁的键和值
       const lockKey = `lock:register:${userData.userAccount}`;
       const lockValue = `${Date.now()}:${Math.random().toString(36).substr(2, 9)}`;
@@ -67,6 +72,11 @@ export class UserService {
   }
 
   async update(id: number, userData: Partial<User>): Promise<User | null> {
+    // 验证用户类型，禁止更新为系统管理员账号
+    if (userData.userType === 2) {
+      throw new Error('禁止设置系统管理员账号');
+    }
+
     // 如果更新密码，需要重新加密
     if (userData.userPassword) {
       userData.userPassword = await PasswordUtil.hashPassword(userData.userPassword);

@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { OrderService } from '../services/order.service';
+import { OrderStatus } from '../enums/order-status.enum';
 
 export class OrderController {
   private orderService: OrderService;
