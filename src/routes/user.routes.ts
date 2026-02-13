@@ -8,11 +8,7 @@ const userController = new UserController();
 // 应用JWT认证中间件
 router.use(authenticateJWT);
 
-// 登录 - 公开访问
-router.post('/login', userController.login);
 
-// 注销 - 需要登录
-router.post('/logout', requireNormalUser, userController.logout);
 
 // 用户查询 - 需要系统管理员权限
 router.get('/', requireSystemAdmin, userController.getAllUsers);
