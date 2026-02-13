@@ -21,78 +21,128 @@
 .searchRow {
   display: flex;
   flex-direction: row;
-  gap: 20rpx;
-  margin: 24rpx 26rpx 0;
-  align-items: stretch;
+  gap: 8rpx;
+  margin: 16rpx 22rpx 0;
+  align-items: center;
 }
 
 .searchLeft {
   flex: 1;
   display: flex;
   flex-direction: row;
-  gap: 20rpx;
+  gap: 8rpx;
 }
 
-.infoCard,
-.searchCard {
-  flex: 1;
+.infoCard {
+  flex: 0.7;
   background: #ffffff;
-  border-radius: 16rpx;
-  border: 1rpx solid #e3e3e3;
-  padding: 16rpx 18rpx;
+  border-radius: 36rpx;
+  border: 1rpx solid #e6e6e6;
+  padding: 8rpx 28rpx;
+  box-sizing: border-box;
+}
+
+.searchCard {
+  flex: 1.7;
+  background: #ffffff;
+  border-radius: 36rpx;
+  border: 1rpx solid #e6e6e6;
+  padding: 8rpx 14rpx;
   box-sizing: border-box;
 }
 
 .infoCard {
   display: flex;
   flex-direction: column;
-  gap: 8rpx;
+  gap: 4rpx;
+  justify-content: center;
 }
 
 .infoLine {
   display: flex;
   flex-direction: row;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 8rpx;
+  justify-content: flex-start;
+  gap: 12rpx;
+}
+
+.infoLineTop {
+  justify-content: flex-start;
+}
+
+.infoLineBottom {
+  justify-content: flex-start;
 }
 
 .infoLabel {
-  font-size: 22rpx;
-  color: #999;
+  font-size: 20rpx;
+  color: #333;
+  flex-shrink: 0;
 }
 
-.infoValue {
-  font-size: 24rpx;
+.infoGroup {
+  display: flex;
+  align-items: center;
+  gap: 2rpx;
+  margin-left: 6rpx;
+  flex-shrink: 0;
+}
+
+.infoDate {
+  font-size: 20rpx;
   color: #333;
-  font-weight: 600;
+  text-align: left;
+}
+
+.infoMeta {
+  font-size: 20rpx;
+  color: #333;
+  min-width: 44rpx;
+  text-align: right;
 }
 
 .searchCard {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8rpx;
+}
+
+.searchIcon {
+  width: 22rpx;
+  height: 22rpx;
+  opacity: 0.6;
+}
+
+.searchInput {
+  flex: 1;
+  height: 42rpx;
+  background: #f7f7f7;
+  border-radius: 21rpx;
+  padding: 0 12rpx;
+  display: flex;
+  align-items: center;
 }
 
 .searchPlaceholder {
-  font-size: 26rpx;
+  font-size: 22rpx;
   color: #666;
 }
 
 .mapButton {
-  width: 120rpx;
+  width: 52rpx;
+  height: 52rpx;
+  border-radius: 50%;
+  border: 1rpx solid #e6e6e6;
   background: #ffffff;
-  border-radius: 16rpx;
-  border: 1rpx solid #fd7a33;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
 .mapIcon {
-  font-size: 26rpx;
-  color: #fd7a33;
-  font-weight: 600;
+  width: 36rpx;
+  height: 36rpx;
+  opacity: 0.75;
 }
 
 .headerRow {
@@ -135,7 +185,7 @@
 
 .infoCardPanel {
   background: #ffffff;
-  padding: 20rpx 18rpx 22rpx;
+  padding: 20rpx 25rpx 22rpx;
   border-radius: 16rpx;
   border: 1rpx solid #e3e3e3;
   box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.08);
@@ -143,9 +193,70 @@
 }
 
 .info-panel-line {
-  font-size: 26rpx;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 30rpx;
   color: #333;
   margin-top: 12rpx;
+  font-weight: 600;
+}
+
+.info-panel-line + .info-panel-line {
+  border-top: 1rpx solid #eeeeee;
+  padding-top: 12rpx;
+  margin-top: 12rpx;
+}
+
+.location-btn {
+  width: 46rpx;
+  height: 46rpx;
+  border-radius: 50%;
+  border: 1rpx solid #fd7a33;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+}
+
+.location-btn:active {
+  transform: scale(0.94);
+  background-color: rgba(253, 122, 51, 0.12);
+  border-color: #fd7a33;
+}
+
+.location-emoji {
+  font-size: 26rpx;
+  line-height: 1;
+}
+
+.date-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.date-range {
+  color: #333;
+}
+
+.night-count {
+  color: #666;
+  font-size: 24rpx;
+}
+
+.guest-summary {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  font-size: 30rpx;
+  color: #333;
+  font-weight: 600;
+}
+
+.guest-item {
+  white-space: nowrap;
 }
 
 .info-panel-line:first-child {

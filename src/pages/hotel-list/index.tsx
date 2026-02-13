@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import hotelPlaceholder from '../../assets/icons/hotelExp.jpg'
+import searchIcon from '../../assets/icons/OIP.jpg'
+import mapIcon from '../../assets/icons/map.jpg'
 const { AMapWX } = require('../../utils/amap-wx')
 
 const mockHotels = [
@@ -54,12 +56,21 @@ export default function HotelList() {
   const [bookingCity, setBookingCity] = useState('深圳')
   const [checkInDate, setCheckInDate] = useState('2026-02-11')
   const [checkOutDate, setCheckOutDate] = useState('2026-02-12')
-  const [bookingGuests, setBookingGuests] = useState('1间房，1成人，1儿童')
+  const [bookingGuests, setBookingGuests] = useState('1间房，1成人，0儿童')
   const [guestDraft, setGuestDraft] = useState({ rooms: 1, adults: 1, children: 1 })
 
   const AMAP_KEY = 'f797b890e4324fcb4f7d7e2dab927978'
 
-  useEffect(() => {
+  const safeDecode = (value?: string) => {
+    if (!value) return ''
+    try {
+      return decodeURIComponent(value)
+    } catch (error) {
+      return value
+    }
+  }
+
+  const fetchCurrentLocation = () => {
     const amap = new AMapWX({ key: AMAP_KEY })
     amap.getRegeo({
       success: (res: any) => {
@@ -74,6 +85,31 @@ export default function HotelList() {
         setCurrentLocation('定位失败')
       }
     })
+  }
+
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params || {}
+    const cityParam = safeDecode(params.city)
+    const keywordParam = safeDecode(params.keyword)
+    const checkInParam = safeDecode(params.checkIn)
+    const checkOutParam = safeDecode(params.checkOut)
+    if (cityParam) {
+      setBookingCity(cityParam)
+    }
+    if (keywordParam) {
+      setCurrentLocation(keywordParam)
+    } else if (cityParam) {
+      setCurrentLocation(cityParam)
+    }
+    if (checkInParam) setCheckInDate(checkInParam)
+    if (checkOutParam) setCheckOutDate(checkOutParam)
+  }, [])
+
+  useEffect(() => {
+    const params = Taro.getCurrentInstance().router?.params || {}
+    const cityParam = safeDecode(params.city)
+    if (cityParam) return
+    fetchCurrentLocation()
   }, [])
 
   useEffect(() => {
@@ -111,6 +147,9 @@ export default function HotelList() {
       children: childrenMatch ? Number(childrenMatch[1]) : 0
     }
   }
+
+  const guestNumbers = useMemo(() => parseGuestNumbers(bookingGuests), [bookingGuests])
+  const guestTotal = guestNumbers.adults + guestNumbers.children
 
   const buildGuestLabel = (rooms: number, adults: number, children: number) => {
     return `${rooms}间房，${adults}成人，${children}儿童`
@@ -202,20 +241,19 @@ export default function HotelList() {
         <View className="searchRow">
           <View className="searchLeft">
             <View className="infoCard" onClick={() => setShowInfoPanel(prev => !prev)}>
-              <View className="infoLine">
-                <Text className="infoLabel">我的位置</Text>
+              <View className="infoLine infoLineTop">
+                <Text className="infoLabel">我的</Text>
+                <View className="infoGroup">
+                  <Text className="infoDate">{formatShortDate(checkInDate)}</Text>
+                  <Text className="infoMeta">{guestNumbers.rooms}间</Text>
+                </View>
               </View>
-              <View className="infoLine">
-                <Text className="infoLabel">入住</Text>
-                <Text className="infoValue">{formatShortDate(checkInDate)}</Text>
-              </View>
-              <View className="infoLine">
-                <Text className="infoLabel">退房</Text>
-                <Text className="infoValue">{formatShortDate(checkOutDate)}</Text>
-              </View>
-              <View className="infoLine">
-                <Text className="infoLabel">需求</Text>
-                <Text className="infoValue">{bookingGuests}</Text>
+              <View className="infoLine infoLineBottom">
+                <Text className="infoLabel">位置</Text>
+                <View className="infoGroup">
+                  <Text className="infoDate">{formatShortDate(checkOutDate)}</Text>
+                  <Text className="infoMeta">{guestTotal}人</Text>
+                </View>
               </View>
             </View>
             <View
@@ -224,14 +262,17 @@ export default function HotelList() {
                 Taro.showToast({ title: '搜索功能待接入', icon: 'none' })
               }}
             >
-              <Text className="searchPlaceholder">位置/品牌/酒店</Text>
+              <Image className="searchIcon" src={searchIcon} mode="aspectFit" />
+              <View className="searchInput">
+                <Text className="searchPlaceholder">位置/品牌/酒店</Text>
+              </View>
             </View>
           </View>
           <View
             className="mapButton"
             onClick={() => Taro.navigateTo({ url: '/pages/hotel-map/index' })}
           >
-            <Text className="mapIcon">地图</Text>
+            <Image className="mapIcon" src={mapIcon} mode="aspectFit" />
           </View>
         </View>
         {showInfoPanel && (
@@ -239,17 +280,28 @@ export default function HotelList() {
             <View className="infoCardPanel">
               <View className="info-panel-line">
                 <View onClick={openCitySelect}>
-                  <Text>具体位置：{currentLocation}</Text>
+                  <Text>当前位置：{currentLocation}</Text>
+                </View>
+                <View
+                  className="location-btn"
+                  onClick={fetchCurrentLocation}
+                >
+                  <Text className="location-emoji">📍</Text>
                 </View>
               </View>
               <View className="info-panel-line">
-                <View onClick={openDateSelect}>
-                  <Text>{formatShortDate(checkInDate)}日-{formatShortDate(checkOutDate)}日 共{calcNights(checkInDate, checkOutDate)}晚</Text>
+                <View className="date-line" onClick={openDateSelect}>
+                  <Text className="date-range">{formatShortDate(checkInDate)}日 - {formatShortDate(checkOutDate)}日</Text>
+                  <Text className="night-count">共{calcNights(checkInDate, checkOutDate)}晚</Text>
                 </View>
               </View>
               <View className="info-panel-line">
                 <View onClick={openGuestPanel}>
-                  <Text>{bookingGuests.replace(/[，,\s]/g, '')}</Text>
+                  <View className="guest-summary">
+                    <Text className="guest-item">{guestNumbers.rooms}间房</Text>
+                    <Text className="guest-item">{guestNumbers.adults}成人</Text>
+                    <Text className="guest-item">{guestNumbers.children}儿童</Text>
+                  </View>
                 </View>
               </View>
             </View>
