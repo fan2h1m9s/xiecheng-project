@@ -25,14 +25,17 @@ export async function authenticateJWT(req: Request, res: Response, next: NextFun
     const authHeader = req.headers.authorization;
     
     // 检查是否存在令牌
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader) {
       // 对于需要认证的路由，后续的requireAuth中间件会处理未登录情况
       // 对于公开路由，允许继续访问
       return next();
     }
     
-    // 提取令牌
-    const token = authHeader.replace('Bearer ', '');
+    // 提取令牌（支持直接传入token或带Bearer前缀的格式）
+    let token = authHeader;
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.replace('Bearer ', '');
+    }
     
     // 验证令牌
     const decoded = JwtUtil.verifyToken(token);
