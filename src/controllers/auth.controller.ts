@@ -21,22 +21,26 @@ export class AuthController {
       const { userAccount, userPassword } = req.body;
       
       // 验证参数
-      if (!userAccount || !userPassword) {
-        res.status(400).json({ success: false, message: '账号和密码不能为空' });
+      if (!userAccount) {
+        res.status(400).json({ success: false, message: '账号不能为空' });
+        return;
+      }
+      if (!userPassword) {
+        res.status(400).json({ success: false, message: '密码不能为空' });
         return;
       }
 
       // 查找用户
       const user = await this.userService.findByAccount(userAccount);
       if (!user) {
-        res.status(401).json({ success: false, message: '用户名或密码错误' });
+        res.status(401).json({ success: false, message: '用户名错误' });
         return;
       }
       
       // 验证密码
       const isValidPassword = await PasswordUtil.verifyPassword(userPassword, user.userPassword);
       if (!isValidPassword) {
-        res.status(401).json({ success: false, message: '用户名或密码错误' });
+        res.status(401).json({ success: false, message: '密码错误' });
         return;
       }
 
@@ -92,16 +96,16 @@ export class AuthController {
   logout = async (req: Request, res: Response): Promise<void> => {
     try {
       // 从请求头获取令牌
-      const token = req.headers.authorization?.replace('Bearer ', '');
+      const token = req.headers.authorization?.replace(' ', '');
       if (!token) {
-        res.status(401).json({ success: false, message: '未提供令牌' });
+        res.status(401).json({ success: false, message: '无法进行身份认证' });
         return;
       }
 
       // 验证令牌
       const decoded = JwtUtil.verifyToken(token);
       if (!decoded || !decoded.userId) {
-        res.status(401).json({ success: false, message: '无效的令牌' });
+        res.status(401).json({ success: false, message: '无效的认证令牌' });
         return;
       }
 
