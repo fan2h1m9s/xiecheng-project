@@ -53,7 +53,7 @@ export class RoomService {
 
   async findAvailableRooms(): Promise<Room[]> {
     return this.roomRepository.find({
-      where: { roomStatus: '空闲' },
+      where: { roomStatus: 0 },
       relations: ['roomType'],
     });
   }

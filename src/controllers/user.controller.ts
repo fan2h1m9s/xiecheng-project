@@ -41,7 +41,18 @@ export class UserController {
       const user = await this.userService.create(req.body);
       // 不返回密码
       const { userPassword, ...userWithoutPassword } = user;
-      res.status(201).json(userWithoutPassword);
+      
+      // 生成JWT令牌
+      const token = JwtUtil.generateToken({ userId: user.id, userAccount: user.userAccount });
+
+      // 存储到Redis
+      await RedisUtil.storeUserSession(user.id, token);
+
+      // 返回用户信息和令牌
+      res.status(201).json({
+        user: userWithoutPassword,
+        token
+      });
     } catch (error: any) {
       if (error.message === '账号已存在') {
         res.status(400).json({ error: error.message });
