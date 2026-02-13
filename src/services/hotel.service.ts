@@ -18,6 +18,11 @@ export class HotelService {
   }
 
   async create(hotelData: Partial<Hotel>): Promise<Hotel> {
+    // 如果未传入酒店状态，默认为待审核
+    if (hotelData.hotelStatus === undefined || hotelData.hotelStatus === null) {
+      hotelData.hotelStatus = 0; // 默认待审核
+    }
+    
     const hotel = this.hotelRepository.create(hotelData);
     return this.hotelRepository.save(hotel);
   }

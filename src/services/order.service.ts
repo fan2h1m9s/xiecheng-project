@@ -26,6 +26,11 @@ export class OrderService {
   }
 
   async create(orderData: Partial<Order>): Promise<Order> {
+    // 如果未传入订单状态，默认为待付款
+    if (orderData.orderStatus === undefined || orderData.orderStatus === null) {
+      orderData.orderStatus = 0; // 默认待付款
+    }
+    
     const order = this.orderRepository.create(orderData);
     return this.orderRepository.save(order);
   }
