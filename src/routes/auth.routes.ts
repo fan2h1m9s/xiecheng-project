@@ -13,8 +13,8 @@ router.post('/login', authController.login);
 const protectedRoutes = Router();
 protectedRoutes.use(authenticateJWT);
 
-// 获取当前用户信息（需要登录）
-protectedRoutes.get('/me', requireAuth(UserType.NORMAL_USER), authController.getCurrentUser);
+// 获取当前用户信息（需要登录，所有登录用户都可访问）
+protectedRoutes.get('/me', requireAuth(UserType.NORMAL_USER, UserType.HOTEL_ADMIN, UserType.SYSTEM_ADMIN), authController.getCurrentUser);
 
 // 测试不同权限的接口
 protectedRoutes.get('/test/normal', requireAuth(UserType.NORMAL_USER), (req, res) => {
