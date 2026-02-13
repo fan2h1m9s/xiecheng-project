@@ -5,7 +5,6 @@ import userRoutes from './routes/user.routes';
 import hotelRoutes from './routes/hotel.routes';
 import roomRoutes from './routes/room.routes';
 import orderRoutes from './routes/order.routes';
-import authRoutes from './routes/auth.routes';
 import { UserType } from './enums/user-type.enum';
 import { AuthenticatedRequest } from './middleware/auth.middleware';
 import { initializeRedis } from './config/redis.config';
@@ -27,7 +26,6 @@ app.get('/', (req: Request, res: Response) => {
   res.json({ message: '酒店后端服务已启动' });
 });
 
-app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/hotels', hotelRoutes);
 app.use('/api/rooms', roomRoutes);
