@@ -1,8 +1,9 @@
-import { View, Map, CoverView } from '@tarojs/components'
-import React, { useEffect, useState } from 'react'
+import { View, Map, CoverView, CoverImage, Image, ScrollView, Text } from '@tarojs/components'
+import React, { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import { AMAP_KEY } from '../../config/map-keys'
+import hotelCover from '../../assets/icons/hotelExp.jpg'
 
 const { AMapWX } = require('../../utils/amap-wx')
 
@@ -11,22 +12,69 @@ const DEFAULT_COORD = {
   longitude: 114.057865
 }
 
+type HotelItem = {
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+  address: string
+  price: number
+  rating: number
+  cover: string
+}
+
+const MOCK_HOTELS: HotelItem[] = [
+  {
+    id: 101,
+    name: '城央臻选酒店',
+    latitude: 22.543585,
+    longitude: 114.05951,
+    address: '福田区福华一路 88 号',
+    price: 528,
+    rating: 4.7,
+    cover: hotelCover
+  },
+  {
+    id: 102,
+    name: '云际观景酒店',
+    latitude: 22.541707,
+    longitude: 114.05521,
+    address: '福田区金田路 18 号',
+    price: 688,
+    rating: 4.8,
+    cover: hotelCover
+  },
+  {
+    id: 103,
+    name: '湾畔逸居酒店',
+    latitude: 22.546181,
+    longitude: 114.06272,
+    address: '福田区深南大道 3008 号',
+    price: 458,
+    rating: 4.5,
+    cover: hotelCover
+  }
+]
+
 export default function HotelMap() {
   const [center, setCenter] = useState(DEFAULT_COORD)
   const [address, setAddress] = useState('定位中')
-  const [scale, setScale] = useState(14)
-  const [diagText, setDiagText] = useState('')
-  const [useHighAccuracy, setUseHighAccuracy] = useState(true)
-  const [activeButton, setActiveButton] = useState('')
+  const [selectedHotel, setSelectedHotel] = useState<HotelItem | null>(null)
+  const scale = 14
+  const useHighAccuracy = true
 
-  const formatAccuracy = (accuracy?: number) => {
-    if (typeof accuracy !== 'number') return 'unknown'
-    return `${Math.round(accuracy)}m`
-  }
-
-  const setDiag = (lines: string[]) => {
-    setDiagText(lines.filter(Boolean).join('\n'))
-  }
+  const circles = useMemo(
+    () =>
+      MOCK_HOTELS.map(hotel => ({
+        latitude: hotel.latitude,
+        longitude: hotel.longitude,
+        color: '#ff3b30',
+        fillColor: '#ff3b304d',
+        radius: 30,
+        strokeWidth: 2
+      })),
+    []
+  )
 
   const locate = () => {
     const amap = new AMapWX({ key: AMAP_KEY })
@@ -37,7 +85,6 @@ export default function HotelMap() {
       success: res => {
         const lng = res.longitude
         const lat = res.latitude
-        const accuracy = res.accuracy
         setCenter({ latitude: lat, longitude: lng })
         amap.getRegeo({
           location: `${lng},${lat}`,
@@ -47,55 +94,59 @@ export default function HotelMap() {
             const desc = first && first.desc ? first.desc : ''
             const display = [name, desc].filter(Boolean).join(' · ')
             setAddress(display || '已定位')
-            setDiag([
-              `wx.getLocation ok: ${lat}, ${lng}`,
-              `accuracy: ${formatAccuracy(accuracy)}`,
-              `highAccuracy: ${useHighAccuracy ? 'on' : 'off'}`,
-              `amap regeo: ${display || 'ok'}`
-            ])
           },
           fail: (err: any) => {
             setAddress('定位失败')
-            const msg = err && err.errMsg ? err.errMsg : 'AMapWX getRegeo failed'
-            setDiag([
-              `wx.getLocation ok: ${lat}, ${lng}`,
-              `accuracy: ${formatAccuracy(accuracy)}`,
-              `highAccuracy: ${useHighAccuracy ? 'on' : 'off'}`,
-              `amap regeo fail: ${msg}`
-            ])
             Taro.showToast({ title: '定位失败，请检查权限', icon: 'none' })
           }
         })
       },
       fail: err => {
         setAddress('定位失败')
-        const msg = err && err.errMsg ? err.errMsg : 'wx.getLocation failed'
-        setDiag([
-          `wx.getLocation fail: ${msg}`
-        ])
         Taro.showToast({ title: '定位失败，请检查权限', icon: 'none' })
       }
     })
   }
 
-  const diagnose = () => {
-    Taro.getLocation({
-      type: 'gcj02',
-      isHighAccuracy: useHighAccuracy,
-      highAccuracyExpireTime: 3000,
-      success: res => {
-        setDiag([
-          `wx.getLocation ok: ${res.latitude}, ${res.longitude}`,
-          `accuracy: ${formatAccuracy(res.accuracy)}`,
-          `highAccuracy: ${useHighAccuracy ? 'on' : 'off'}`
-        ])
-      },
-      fail: err => {
-        const msg = err && err.errMsg ? err.errMsg : 'wx.getLocation failed'
-        setDiag([
-          `wx.getLocation fail: ${msg}`
-        ])
+  const calcDistanceMeters = (
+    lat1: number,
+    lng1: number,
+    lat2: number,
+    lng2: number
+  ) => {
+    const toRad = (val: number) => (val * Math.PI) / 180
+    const dLat = toRad(lat2 - lat1)
+    const dLng = toRad(lng2 - lng1)
+    const radLat1 = toRad(lat1)
+    const radLat2 = toRad(lat2)
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(radLat1) * Math.cos(radLat2) * Math.sin(dLng / 2) * Math.sin(dLng / 2)
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+    return 6371000 * c
+  }
+
+  const handleMapTap = (event: any) => {
+    const latitude = event?.detail?.latitude
+    const longitude = event?.detail?.longitude
+    if (typeof latitude !== 'number' || typeof longitude !== 'number') return
+    let nearest: { hotel: HotelItem; distance: number } | null = null
+    MOCK_HOTELS.forEach(hotel => {
+      const distance = calcDistanceMeters(latitude, longitude, hotel.latitude, hotel.longitude)
+      if (!nearest || distance < nearest.distance) {
+        nearest = { hotel, distance }
       }
+    })
+    if (nearest && nearest.distance <= 150) {
+      setSelectedHotel(nearest.hotel)
+      setCenter({ latitude: nearest.hotel.latitude, longitude: nearest.hotel.longitude })
+    }
+  }
+
+  const handleOpenDetail = () => {
+    if (!selectedHotel) return
+    Taro.navigateTo({
+      url: `/pages/hotel-detail/index?id=${selectedHotel.id}`
     })
   }
 
@@ -112,47 +163,61 @@ export default function HotelMap() {
           longitude={center.longitude}
           scale={scale}
           showLocation
-          onError={(err) => {
-            console.error('Map error:', err)
-          }}
+          circles={circles}
+          onTap={handleMapTap}
         />
         <CoverView className="map-header">
           <CoverView className="map-info">
             <CoverView className="map-title">高德地图</CoverView>
             <CoverView className="map-subtitle">{address}</CoverView>
           </CoverView>
-          <CoverView className="map-actions">
-            <CoverView
-              className={`map-button ${activeButton === 'locate' ? 'active' : ''}`}
-              onTouchStart={() => setActiveButton('locate')}
-              onTouchEnd={() => setActiveButton('')}
-              onClick={locate}
-            >
-              重新定位
-            </CoverView>
-            <CoverView
-              className={`map-button ${activeButton === 'diagnose' ? 'active' : ''}`}
-              onTouchStart={() => setActiveButton('diagnose')}
-              onTouchEnd={() => setActiveButton('')}
-              onClick={diagnose}
-            >
-              定位诊断
-            </CoverView>
-            <CoverView
-              className={`map-button ${useHighAccuracy ? 'on' : ''} ${activeButton === 'accuracy' ? 'active' : ''}`}
-              onTouchStart={() => setActiveButton('accuracy')}
-              onTouchEnd={() => setActiveButton('')}
-              onClick={() => setUseHighAccuracy(prev => !prev)}
-            >
-              {useHighAccuracy ? '高精度:开' : '高精度:关'}
-            </CoverView>
-          </CoverView>
         </CoverView>
-        {diagText ? (
-          <CoverView className="map-diagnose">
-            <CoverView className="map-diagnose-text">{diagText}</CoverView>
+        {selectedHotel && (
+          <CoverView className="map-card">
+            <CoverImage className="map-card-thumb" src={selectedHotel.cover} />
+            <CoverView className="map-card-body">
+              <CoverView className="map-card-title">{selectedHotel.name}</CoverView>
+              <CoverView className="map-card-address">{selectedHotel.address}</CoverView>
+              <CoverView className="map-card-meta">
+                <CoverView className="map-card-rating">{selectedHotel.rating} 分</CoverView>
+                <CoverView className="map-card-price">¥{selectedHotel.price} 起</CoverView>
+              </CoverView>
+            </CoverView>
+            <CoverView className="map-card-actions">
+              <CoverView className="map-card-button" onClick={handleOpenDetail}>
+                查看详情
+              </CoverView>
+              <CoverView className="map-card-close" onClick={() => setSelectedHotel(null)}>
+                关闭
+              </CoverView>
+            </CoverView>
           </CoverView>
-        ) : null}
+        )}
+      </View>
+      <View className="debug-card-panel">
+        <View className="debug-card-title">调试酒店卡片</View>
+        <ScrollView className="debug-card-list" scrollX>
+          {MOCK_HOTELS.map(hotel => (
+            <View
+              className="debug-card-item"
+              key={hotel.id}
+              onClick={() => {
+                setSelectedHotel(hotel)
+                setCenter({ latitude: hotel.latitude, longitude: hotel.longitude })
+              }}
+            >
+              <Image className="debug-card-thumb" src={hotel.cover} mode="aspectFill" />
+              <View className="debug-card-body">
+                <View className="debug-card-name">{hotel.name}</View>
+                <View className="debug-card-address">{hotel.address}</View>
+                <View className="debug-card-meta">
+                  <Text className="debug-card-rating">{hotel.rating} 分</Text>
+                  <Text className="debug-card-price">¥{hotel.price} 起</Text>
+                </View>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
       </View>
     </View>
   )

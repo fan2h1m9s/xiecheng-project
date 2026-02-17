@@ -1,6 +1,5 @@
-
 import { View, Text, Image, Input, Picker } from '@tarojs/components'
-import Taro from '@tarojs/taro'
+import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import './index.scss'
 
@@ -241,6 +240,10 @@ export default function Index() {
       url: `/pages/hotel-list/index?${queryString}`
     })
   }
+
+  useDidShow(() => {
+    handleLocation()
+  })
 
   return (
     <View className='index'>

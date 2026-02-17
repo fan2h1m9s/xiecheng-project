@@ -171,6 +171,7 @@ export default function HotelList() {
     if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return 0
     const diffMs = endDate.getTime() - startDate.getTime()
     const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000))
+    if (diffDays === 0) return 1
     return Math.max(0, diffDays)
   }
 
