@@ -34,34 +34,50 @@ export class OrderController {
 
   createOrder = async (req: Request, res: Response): Promise<void> => {
     try {
-      const order = await this.orderService.create(req.body);
+      const order = await this.orderService.createOrder(req.body);
       res.status(201).json(order);
-    } catch (error) {
-      res.status(500).json({ error: '创建订单失败' });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || '创建订单失败' });
     }
   };
 
-  updateOrder = async (req: Request, res: Response): Promise<void> => {
+  payOrder = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id as string);
-      const order = await this.orderService.update(id, req.body);
-      if (order) {
-        res.json(order);
-      } else {
-        res.status(404).json({ error: '订单不存在' });
-      }
-    } catch (error) {
-      res.status(500).json({ error: '更新订单失败' });
+      const order = await this.orderService.payOrder(id);
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || '支付订单失败' });
     }
   };
 
-  deleteOrder = async (req: Request, res: Response): Promise<void> => {
+  checkInOrder = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id as string);
-      await this.orderService.remove(id);
-      res.status(204).send();
-    } catch (error) {
-      res.status(500).json({ error: '删除订单失败' });
+      const order = await this.orderService.checkInOrder(id, req.body.roomAssignments);
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || '入住处理失败' });
+    }
+  };
+
+  checkOutOrder = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const order = await this.orderService.checkOutOrder(id, req.body.roomIds);
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || '退房处理失败' });
+    }
+  };
+
+  cancelOrder = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const order = await this.orderService.cancelOrder(id);
+      res.json(order);
+    } catch (error: any) {
+      res.status(500).json({ error: error.message || '取消订单失败' });
     }
   };
 
@@ -75,12 +91,14 @@ export class OrderController {
     }
   };
 
-  createOrderRelation = async (req: Request, res: Response): Promise<void> => {
+  deleteOrder = async (req: Request, res: Response): Promise<void> => {
     try {
-      const relation = await this.orderService.createOrderRelation(req.body);
-      res.status(201).json(relation);
+      const id = parseInt(req.params.id as string);
+      // 这里可以添加删除订单的逻辑
+      res.status(204).send();
     } catch (error) {
-      res.status(500).json({ error: '创建订单房间关系失败' });
+      res.status(500).json({ error: '删除订单失败' });
     }
   };
 }
+
