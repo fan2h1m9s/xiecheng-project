@@ -87,9 +87,16 @@ export default function HotelList() {
       title: '状态',
       dataIndex: 'hotelStatus',
       key: 'hotelStatus',
-      width: 100,
-      render: (status: HotelStatus) => (
-        <Tag color={statusMap[status]?.color}>{statusMap[status]?.text || '未知'}</Tag>
+      width: 150,
+      render: (status: HotelStatus, record: Hotel) => (
+        <Space direction="vertical" size={0}>
+          <Tag color={statusMap[status]?.color}>{statusMap[status]?.text || '未知'}</Tag>
+          {status === HotelStatus.REJECTED && record.hotelRemark?.includes('【拒绝原因】') && (
+            <span style={{ fontSize: 12, color: '#ff4d4f' }}>
+              {record.hotelRemark.replace('【拒绝原因】', '')}
+            </span>
+          )}
+        </Space>
       ),
     },
     {

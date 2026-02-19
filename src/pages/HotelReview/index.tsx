@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
-import { Card, Table, Button, Space, Tag, Modal, message, Descriptions } from 'antd'
+import { Card, Table, Button, Space, Tag, Modal, message, Descriptions, Input } from 'antd'
 import { CheckOutlined, CloseOutlined, EyeOutlined } from '@ant-design/icons'
 import { getHotels, updateHotel } from '@/api/hotel'
 import { Hotel, HotelStatus } from '@/types'
 import type { ColumnsType } from 'antd/es/table'
 import dayjs from 'dayjs'
+
+const { TextArea } = Input
 
 const statusMap = {
   [HotelStatus.PENDING_APPROVAL]: { text: '待审核', color: 'processing' },
@@ -52,12 +54,32 @@ export default function HotelReview() {
   }
 
   const handleReject = async (hotel: Hotel) => {
+    let rejectReason = ''
     Modal.confirm({
       title: '确认拒绝',
-      content: `确定要拒绝酒店"${hotel.hotelNameZh}"的审核吗？`,
+      content: (
+        <div>
+          <p>确定要拒绝酒店"{hotel.hotelNameZh}"的审核吗？</p>
+          <TextArea
+            rows={3}
+            placeholder="请输入拒绝原因（必填）"
+            onChange={(e) => {
+              rejectReason = e.target.value
+            }}
+            style={{ marginTop: 10 }}
+          />
+        </div>
+      ),
       onOk: async () => {
+        if (!rejectReason.trim()) {
+          message.error('请输入拒绝原因')
+          return Promise.reject()
+        }
         try {
-          await updateHotel(hotel.id, { hotelStatus: HotelStatus.REJECTED })
+          await updateHotel(hotel.id, { 
+            hotelStatus: HotelStatus.REJECTED,
+            hotelRemark: `【拒绝原因】${rejectReason}`
+          })
           message.success('已拒绝')
           fetchHotels()
         } catch (error) {
@@ -130,8 +152,15 @@ export default function HotelReview() {
       dataIndex: 'hotelStatus',
       key: 'hotelStatus',
       width: 100,
-      render: (status: HotelStatus) => (
-        <Tag color={statusMap[status]?.color}>{statusMap[status]?.text || '未知'}</Tag>
+      render: (status: HotelStatus, record: Hotel) => (
+        <Space direction="vertical" size={0}>
+          <Tag color={statusMap[status]?.color}>{statusMap[status]?.text || '未知'}</Tag>
+          {status === HotelStatus.REJECTED && record.hotelRemark?.includes('【拒绝原因】') && (
+            <span style={{ fontSize: 12, color: '#ff4d4f' }}>
+              {record.hotelRemark.replace('【拒绝原因】', '')}
+            </span>
+          )}
+        </Space>
       ),
     },
     {
@@ -248,6 +277,11 @@ export default function HotelReview() {
               <Tag color={statusMap[currentHotel.hotelStatus!]?.color}>
                 {statusMap[currentHotel.hotelStatus!]?.text || '未知'}
               </Tag>
+              {currentHotel.hotelStatus === HotelStatus.REJECTED && currentHotel.hotelRemark?.includes('【拒绝原因】') && (
+                <div style={{ marginTop: 8, color: '#ff4d4f' }}>
+                  拒绝原因：{currentHotel.hotelRemark.replace('【拒绝原因】', '')}
+                </div>
+              )}
             </Descriptions.Item>
             <Descriptions.Item label="酒店描述" span={2}>
               {currentHotel.hotelDis || '-'}
