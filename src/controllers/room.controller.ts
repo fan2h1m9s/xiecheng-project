@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { RoomService } from '../services/room.service';
+import { RoomStatus } from '../enums/room-status.enum';
 
 export class RoomController {
   private roomService: RoomService;
@@ -116,4 +117,45 @@ export class RoomController {
       res.status(500).json({ error: '获取酒店房间失败' });
     }
   };
-} 
+
+  updateRoomStatus = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const roomId = parseInt(req.params.id as string);
+      const { status } = req.body;
+
+      if (!status || !Object.values(RoomStatus).includes(status)) {
+        res.status(400).json({ error: '无效的房间状态' });
+        return;
+      }
+
+      const room = await this.roomService.updateRoomStatus(roomId, status);
+      if (room) {
+        res.json(room);
+      } else {
+        res.status(404).json({ error: '房间不存在' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: '更新房间状态失败' });
+    }
+  };
+
+  getRoomsByRoomType = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const roomTypeId = parseInt(req.params.roomTypeId as string);
+      const rooms = await this.roomService.findRoomsByRoomType(roomTypeId);
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ error: '获取房型房间失败' });
+    }
+  };
+
+  getAvailableRoomsByHotel = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const hotelId = parseInt(req.params.hotelId as string);
+      const rooms = await this.roomService.findAvailableRoomsByHotel(hotelId);
+      res.json(rooms);
+    } catch (error) {
+      res.status(500).json({ error: '获取酒店可用房间失败' });
+    }
+  };
+}  

@@ -3,6 +3,7 @@ import { AppDataSource } from '../config/typeorm.config';
 import { Room } from '../entities/Room';
 import { RoomType } from '../entities/RoomType';
 import { Keyword } from '../entities/Keyword';
+import { RoomStatus } from '../enums/room-status.enum';
 
 export class RoomService {
   private roomRepository: Repository<Room>;
@@ -131,16 +132,36 @@ export class RoomService {
 
   async findAvailableRooms(): Promise<Room[]> {
     return this.roomRepository.find({
-      where: { roomStatus: 0 },
-      relations: ['roomType'],
+      where: { roomStatus: RoomStatus.AVAILABLE },
+      relations: ['roomType', 'hotel'],
     });
   }
 
   async findRoomsByHotel(hotelId: number): Promise<Room[]> {
-    // 这里需要根据实际的酒店-房间关联关系进行查询
-    // 假设Room实体中有hotelId字段
     return this.roomRepository.find({
-      where: { /* hotelId: hotelId */ },
+      where: { hotelId },
+      relations: ['roomType'],
+    });
+  }
+
+  async updateRoomStatus(roomId: number, status: RoomStatus): Promise<Room | null> {
+    await this.roomRepository.update(roomId, { roomStatus: status });
+    return this.roomRepository.findOne({
+      where: { id: roomId },
+      relations: ['roomType', 'hotel'],
+    });
+  }
+
+  async findRoomsByRoomType(roomTypeId: number): Promise<Room[]> {
+    return this.roomRepository.find({
+      where: { roomTypeId },
+      relations: ['roomType', 'hotel'],
+    });
+  }
+
+  async findAvailableRoomsByHotel(hotelId: number): Promise<Room[]> {
+    return this.roomRepository.find({
+      where: { hotelId, roomStatus: RoomStatus.AVAILABLE },
       relations: ['roomType'],
     });
   }

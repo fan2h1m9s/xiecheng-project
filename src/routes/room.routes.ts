@@ -34,4 +34,13 @@ router.get('/available', roomController.getAvailableRooms);
 // 按酒店查询房间 - 公开访问
 router.get('/hotel/:hotelId', roomController.getRoomsByHotel);
 
+// 按房型查询房间 - 公开访问
+router.get('/room-type/:roomTypeId', roomController.getRoomsByRoomType);
+
+// 按酒店查询可用房间 - 公开访问
+router.get('/hotel/:hotelId/available', roomController.getAvailableRoomsByHotel);
+
+// 更新房间状态 - 需要酒店管理员或系统管理员权限
+router.put('/:id/status', requireHotelOrSystemAdmin, roomController.updateRoomStatus);
+
 export default router;
