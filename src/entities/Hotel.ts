@@ -37,7 +37,7 @@ export class Hotel {
   @Column({ name: 'hotel_status', type: 'tinyint', nullable: true })
   hotelStatus!: number;
 
-  @Column({ name: 'hotel_remark', type: 'text', nullable: true })
+  @Column({ name: 'hotel_remarks', type: 'text', nullable: true })
   hotelRemark!: string;
 
   @Column({ name: 'user_id', nullable: true })

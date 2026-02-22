@@ -7,8 +7,8 @@ export class Keyword {
   @PrimaryGeneratedColumn()
   id!: number;
 
-  @Column({ name: 'keyword', length: 100, nullable: false })
-  keyword!: string;
+  @Column({ name: 'key_name', length: 100, nullable: false })
+  keyName!: string;
 
   @Column({ name: 'hotel_id', nullable: true })
   hotelId!: number;

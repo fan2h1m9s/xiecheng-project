@@ -66,7 +66,7 @@ export class RoomService {
       if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
           const keywordEntity = this.keywordRepository.create({
-            keyword,
+            keyName: keyword,
             roomTypeId: savedRoomType.id
           });
           await queryRunner.manager.save(keywordEntity);
@@ -108,7 +108,7 @@ export class RoomService {
         if (keywords.length > 0) {
           for (const keyword of keywords) {
             const keywordEntity = this.keywordRepository.create({
-              keyword,
+              keyName: keyword,
               roomTypeId: updatedRoomType.id
             });
             await queryRunner.manager.save(keywordEntity);

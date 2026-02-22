@@ -44,7 +44,7 @@ export class HotelService {
       if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
           const keywordEntity = this.keywordRepository.create({
-            keyword,
+            keyName: keyword,
             hotelId: savedHotel.id
           });
           await queryRunner.manager.save(keywordEntity);
@@ -89,7 +89,7 @@ export class HotelService {
         if (keywords.length > 0) {
           for (const keyword of keywords) {
             const keywordEntity = this.keywordRepository.create({
-              keyword,
+              keyName: keyword,
               hotelId: updatedHotel.id
             });
             await queryRunner.manager.save(keywordEntity);
