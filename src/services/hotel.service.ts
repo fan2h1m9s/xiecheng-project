@@ -29,63 +29,120 @@ export class HotelService {
       hotelData.hotelStatus = 0; // 默认待审核
     }
     
-    const hotel = this.hotelRepository.create(hotelData);
-    const savedHotel = await this.hotelRepository.save(hotel);
+    // 创建QueryRunner
+    const queryRunner = AppDataSource.createQueryRunner();
     
-    // 处理关键词标签
-    if (keywords && keywords.length > 0) {
-      for (const keyword of keywords) {
-        const keywordEntity = this.keywordRepository.create({
-          keyword,
-          hotelId: savedHotel.id
-        });
-        await this.keywordRepository.save(keywordEntity);
-      }
-    }
+    // 开始事务
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     
-    // 同步到ElasticSearch
-    await this.elasticsearchService.indexHotel(savedHotel);
-    
-    return savedHotel;
-  }
-
-  async update(id: number, hotelData: Partial<Hotel>, keywords?: string[]): Promise<Hotel | null> {
-    await this.hotelRepository.update(id, hotelData);
-    const updatedHotel = await this.hotelRepository.findOneBy({ id });
-    
-    // 处理关键词标签
-    if (updatedHotel && keywords !== undefined) {
-      // 删除现有的关键词记录
-      await this.keywordRepository.delete({ hotelId: id });
+    try {
+      const hotel = this.hotelRepository.create(hotelData);
+      const savedHotel = await queryRunner.manager.save(hotel);
       
-      // 创建新的关键词记录
-      if (keywords.length > 0) {
+      // 处理关键词标签
+      if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
           const keywordEntity = this.keywordRepository.create({
             keyword,
-            hotelId: updatedHotel.id
+            hotelId: savedHotel.id
           });
-          await this.keywordRepository.save(keywordEntity);
+          await queryRunner.manager.save(keywordEntity);
         }
       }
+      
+      // 提交事务
+      await queryRunner.commitTransaction();
+      
+      // 同步到ElasticSearch
+      await this.elasticsearchService.indexHotel(savedHotel);
+      
+      return savedHotel;
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放QueryRunner
+      await queryRunner.release();
     }
+  }
+
+  async update(id: number, hotelData: Partial<Hotel>, keywords?: string[]): Promise<Hotel | null> {
+    // 创建QueryRunner
+    const queryRunner = AppDataSource.createQueryRunner();
     
-    // 同步到ElasticSearch
-    if (updatedHotel) {
-      await this.elasticsearchService.updateHotel(updatedHotel);
+    // 开始事务
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    
+    try {
+      await queryRunner.manager.update(Hotel, id, hotelData);
+      const updatedHotel = await queryRunner.manager.findOneBy(Hotel, { id });
+      
+      // 处理关键词标签
+      if (updatedHotel && keywords !== undefined) {
+        // 删除现有的关键词记录
+        await queryRunner.manager.delete(Keyword, { hotelId: id });
+        
+        // 创建新的关键词记录
+        if (keywords.length > 0) {
+          for (const keyword of keywords) {
+            const keywordEntity = this.keywordRepository.create({
+              keyword,
+              hotelId: updatedHotel.id
+            });
+            await queryRunner.manager.save(keywordEntity);
+          }
+        }
+      }
+      
+      // 提交事务
+      await queryRunner.commitTransaction();
+      
+      // 同步到ElasticSearch
+      if (updatedHotel) {
+        await this.elasticsearchService.updateHotel(updatedHotel);
+      }
+      
+      return updatedHotel;
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放QueryRunner
+      await queryRunner.release();
     }
-    
-    return updatedHotel;
   }
 
   async remove(id: number): Promise<void> {
-    // 删除相关的关键词记录
-    await this.keywordRepository.delete({ hotelId: id });
+    // 创建QueryRunner
+    const queryRunner = AppDataSource.createQueryRunner();
     
-    await this.hotelRepository.delete(id);
+    // 开始事务
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     
-    // 从ElasticSearch删除
-    await this.elasticsearchService.deleteHotel(id);
+    try {
+      // 删除相关的关键词记录
+      await queryRunner.manager.delete(Keyword, { hotelId: id });
+      
+      await queryRunner.manager.delete(Hotel, id);
+      
+      // 提交事务
+      await queryRunner.commitTransaction();
+      
+      // 从ElasticSearch删除
+      await this.elasticsearchService.deleteHotel(id);
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放QueryRunner
+      await queryRunner.release();
+    }
   }
 
   async syncAllHotelsToElasticSearch(): Promise<void> {

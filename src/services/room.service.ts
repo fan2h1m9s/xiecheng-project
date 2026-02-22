@@ -50,45 +50,83 @@ export class RoomService {
   }
 
   async createRoomType(roomTypeData: Partial<RoomType>, keywords?: string[]): Promise<RoomType> {
-    const roomType = this.roomTypeRepository.create(roomTypeData);
-    const savedRoomType = await this.roomTypeRepository.save(roomType);
+    // 创建QueryRunner
+    const queryRunner = AppDataSource.createQueryRunner();
     
-    // 处理关键词标签
-    if (keywords && keywords.length > 0) {
-      for (const keyword of keywords) {
-        const keywordEntity = this.keywordRepository.create({
-          keyword,
-          roomTypeId: savedRoomType.id
-        });
-        await this.keywordRepository.save(keywordEntity);
-      }
-    }
+    // 开始事务
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
     
-    return savedRoomType;
-  }
-
-  async updateRoomType(id: number, roomTypeData: Partial<RoomType>, keywords?: string[]): Promise<RoomType | null> {
-    await this.roomTypeRepository.update(id, roomTypeData);
-    const updatedRoomType = await this.roomTypeRepository.findOneBy({ id });
-    
-    // 处理关键词标签
-    if (updatedRoomType && keywords !== undefined) {
-      // 删除现有的关键词记录
-      await this.keywordRepository.delete({ roomTypeId: id });
+    try {
+      const roomType = this.roomTypeRepository.create(roomTypeData);
+      const savedRoomType = await queryRunner.manager.save(roomType);
       
-      // 创建新的关键词记录
-      if (keywords.length > 0) {
+      // 处理关键词标签
+      if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
           const keywordEntity = this.keywordRepository.create({
             keyword,
-            roomTypeId: updatedRoomType.id
+            roomTypeId: savedRoomType.id
           });
-          await this.keywordRepository.save(keywordEntity);
+          await queryRunner.manager.save(keywordEntity);
         }
       }
+      
+      // 提交事务
+      await queryRunner.commitTransaction();
+      
+      return savedRoomType;
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放QueryRunner
+      await queryRunner.release();
     }
+  }
+
+  async updateRoomType(id: number, roomTypeData: Partial<RoomType>, keywords?: string[]): Promise<RoomType | null> {
+    // 创建QueryRunner
+    const queryRunner = AppDataSource.createQueryRunner();
     
-    return updatedRoomType;
+    // 开始事务
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    
+    try {
+      await queryRunner.manager.update(RoomType, id, roomTypeData);
+      const updatedRoomType = await queryRunner.manager.findOneBy(RoomType, { id });
+      
+      // 处理关键词标签
+      if (updatedRoomType && keywords !== undefined) {
+        // 删除现有的关键词记录
+        await queryRunner.manager.delete(Keyword, { roomTypeId: id });
+        
+        // 创建新的关键词记录
+        if (keywords.length > 0) {
+          for (const keyword of keywords) {
+            const keywordEntity = this.keywordRepository.create({
+              keyword,
+              roomTypeId: updatedRoomType.id
+            });
+            await queryRunner.manager.save(keywordEntity);
+          }
+        }
+      }
+      
+      // 提交事务
+      await queryRunner.commitTransaction();
+      
+      return updatedRoomType;
+    } catch (error) {
+      // 回滚事务
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      // 释放QueryRunner
+      await queryRunner.release();
+    }
   }
 
   async findAvailableRooms(): Promise<Room[]> {
