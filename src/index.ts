@@ -8,6 +8,7 @@ import orderRoutes from './routes/order.routes';
 import { UserType } from './enums/user-type.enum';
 import { AuthenticatedRequest } from './middleware/auth.middleware';
 import { initializeRedis } from './config/redis.config';
+import { ElasticsearchService } from './services/elasticsearch.service';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -39,6 +40,11 @@ const startServer = async () => {
     
     // 初始化Redis连接
     await initializeRedis();
+    
+    // 初始化ElasticSearch索引
+    const elasticsearchService = new ElasticsearchService();
+    await elasticsearchService.createIndex();
+    console.log('ElasticSearch索引初始化成功');
     
     app.listen(PORT, () => {
       console.log(`服务器运行在 http://localhost:${PORT}`);

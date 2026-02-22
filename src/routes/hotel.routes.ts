@@ -5,10 +5,13 @@ import { authenticateJWT, requireHotelOrSystemAdmin, requireHotelOwnership } fro
 const router = Router();
 const hotelController = new HotelController();
 
+// 酒店搜索 - 公开访问
+router.get('/search', hotelController.searchHotels);
+
 // 应用JWT认证中间件
 router.use(authenticateJWT);
 
-// 酒店查询 - 公开访问（普通用户可访问）
+// 酒店查询 - 登录用户可访问
 router.get('/', hotelController.getAllHotels);
 router.get('/:id', hotelController.getHotelById);
 
@@ -20,5 +23,8 @@ router.put('/:id', requireHotelOrSystemAdmin, requireHotelOwnership, hotelContro
 
 // 酒店删除 - 需要管理员权限 + 所有权检查
 router.delete('/:id', requireHotelOrSystemAdmin, requireHotelOwnership, hotelController.deleteHotel);
+
+// 同步酒店数据到ElasticSearch - 需要管理员权限
+router.post('/sync-es', requireHotelOrSystemAdmin, hotelController.syncHotelsToES);
 
 export default router;
