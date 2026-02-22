@@ -36,7 +36,8 @@ export class HotelController {
 
   createHotel = async (req: Request, res: Response): Promise<void> => {
     try {
-      const hotel = await this.hotelService.create(req.body);
+      const { keywords, ...hotelData } = req.body;
+      const hotel = await this.hotelService.create(hotelData, keywords);
       res.status(201).json(hotel);
     } catch (error) {
       res.status(500).json({ error: '创建酒店失败' });
@@ -46,7 +47,8 @@ export class HotelController {
   updateHotel = async (req: Request, res: Response): Promise<void> => {
     try {
       const id = parseInt(req.params.id as string);
-      const hotel = await this.hotelService.update(id, req.body);
+      const { keywords, ...hotelData } = req.body;
+      const hotel = await this.hotelService.update(id, hotelData, keywords);
       if (hotel) {
         res.json(hotel);
       } else {

@@ -75,10 +75,26 @@ export class RoomController {
 
   createRoomType = async (req: Request, res: Response): Promise<void> => {
     try {
-      const roomType = await this.roomService.createRoomType(req.body);
+      const { keywords, ...roomTypeData } = req.body;
+      const roomType = await this.roomService.createRoomType(roomTypeData, keywords);
       res.status(201).json(roomType);
     } catch (error) {
       res.status(500).json({ error: '创建房间类型失败' });
+    }
+  };
+
+  updateRoomType = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const id = parseInt(req.params.id as string);
+      const { keywords, ...roomTypeData } = req.body;
+      const roomType = await this.roomService.updateRoomType(id, roomTypeData, keywords);
+      if (roomType) {
+        res.json(roomType);
+      } else {
+        res.status(404).json({ error: '房间类型不存在' });
+      }
+    } catch (error) {
+      res.status(500).json({ error: '更新房间类型失败' });
     }
   };
 

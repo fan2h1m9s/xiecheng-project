@@ -25,6 +25,9 @@ router.delete('/:id', requireHotelOrSystemAdmin, roomController.deleteRoom);
 // 房间类型创建 - 需要酒店管理员或系统管理员权限
 router.post('/types', requireHotelOrSystemAdmin, roomController.createRoomType);
 
+// 房间类型更新 - 需要酒店管理员或系统管理员权限
+router.put('/types/:id', requireHotelOrSystemAdmin, roomController.updateRoomType);
+
 // 剩余空房查询 - 公开访问
 router.get('/available', roomController.getAvailableRooms);
 

@@ -6,6 +6,7 @@ import { RoomType } from '../entities/RoomType';
 import { Room } from '../entities/Room';
 import { Order } from '../entities/Order';
 import { OrderRoomRelation } from '../entities/OrderRoomRelation';
+import { Keyword } from '../entities/Keyword';
 
 export const typeOrmConfig: DataSourceOptions = {
   type: 'mysql',
@@ -21,7 +22,8 @@ export const typeOrmConfig: DataSourceOptions = {
     RoomType,
     Room,
     Order,
-    OrderRoomRelation
+    OrderRoomRelation,
+    Keyword
   ],
   synchronize: false,
   logging: true,
