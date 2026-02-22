@@ -380,6 +380,7 @@
   | hotelPhone | string | 是 | 酒店电话 |
   | hotelStatus | number | 是 | 酒店状态（1: 正常, 2: 暂停营业） |
   | hotelRegion | number | 是 | 酒店地区（1: 地区1, 2: 地区2, 3: 地区3, 4: 地区4, 5: 地区5） |
+  | keywords | array | 否 | 关键词数组，用于ElasticSearch搜索 |
 - **响应格式**:
   - **成功响应**:
     ```json
@@ -414,6 +415,7 @@
   | hotelPhone | string | 否 | 酒店电话 |
   | hotelStatus | number | 否 | 酒店状态（1: 正常, 2: 暂停营业） |
   | hotelRegion | number | 否 | 酒店地区（1: 地区1, 2: 地区2, 3: 地区3, 4: 地区4, 5: 地区5） |
+  | keywords | array | 否 | 关键词数组，用于ElasticSearch搜索 |
 - **响应格式**:
   - **成功响应**:
     ```json
@@ -457,6 +459,70 @@
     }
     ```
 - **权限要求**: 需要酒店管理员或系统管理员权限，且需要是酒店的所有者
+
+#### 2.6 搜索酒店
+
+- **接口路径**: `/api/hotels/search`
+- **请求方法**: GET
+- **功能描述**: 使用关键词搜索酒店（基于ElasticSearch）
+- **请求参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  | --- | --- | --- | --- |
+  | q | string | 是 | 搜索关键词 |
+  | page | number | 否 | 页码，默认1 |
+  | pageSize | number | 否 | 每页数量，默认10 |
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    {
+      "total": 1,
+      "hits": [
+        {
+          "id": 1,
+          "hotelName": "酒店1",
+          "hotelAddress": "地址1",
+          "hotelPhone": "1234567890",
+          "hotelStatus": 1,
+          "hotelRegion": 1
+        }
+      ],
+      "page": 1,
+      "pageSize": 10
+    }
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "搜索关键词不能为空"
+    }
+    ```
+    ```json
+    {
+      "error": "搜索酒店失败"
+    }
+    ```
+- **权限要求**: 公开
+
+#### 2.7 同步酒店数据到ElasticSearch
+
+- **接口路径**: `/api/hotels/sync-es`
+- **请求方法**: POST
+- **功能描述**: 将所有酒店数据同步到ElasticSearch
+- **请求参数**: 无
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    {
+      "message": "酒店数据同步到ElasticSearch成功"
+    }
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "同步酒店数据失败"
+    }
+    ```
+- **权限要求**: 需要酒店管理员或系统管理员权限
 
 ### 3. 房间模块
 
@@ -661,6 +727,7 @@
   | --- | --- | --- | --- |
   | roomTypeName | string | 是 | 房间类型名称 |
   | roomTypeDescription | string | 否 | 房间类型描述 |
+  | keywords | array | 否 | 关键词数组，用于ElasticSearch搜索 |
 - **响应格式**:
   - **成功响应**:
     ```json
@@ -678,7 +745,41 @@
     ```
 - **权限要求**: 需要酒店管理员或系统管理员权限
 
-#### 3.8 获取可用房间
+#### 3.8 更新房间类型
+
+- **接口路径**: `/api/rooms/types/:id`
+- **请求方法**: PUT
+- **功能描述**: 更新房间类型信息
+- **请求参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  | --- | --- | --- | --- |
+  | id | number | 是 | 房间类型 ID |
+  | roomTypeName | string | 否 | 房间类型名称 |
+  | roomTypeDescription | string | 否 | 房间类型描述 |
+  | keywords | array | 否 | 关键词数组，用于ElasticSearch搜索 |
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    {
+      "id": 1,
+      "roomTypeName": "标准间更新",
+      "roomTypeDescription": "标准双人间更新"
+    }
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "房间类型不存在"
+    }
+    ```
+    ```json
+    {
+      "error": "更新房间类型失败"
+    }
+    ```
+- **权限要求**: 需要酒店管理员或系统管理员权限
+
+#### 3.9 获取可用房间
 
 - **接口路径**: `/api/rooms/available`
 - **请求方法**: GET
@@ -714,7 +815,7 @@
     ```
 - **权限要求**: 公开（普通用户可访问）
 
-#### 3.9 获取酒店房间
+#### 3.10 获取酒店房间
 
 - **接口路径**: `/api/rooms/hotel/:hotelId`
 - **请求方法**: GET
@@ -752,6 +853,116 @@
     }
     ```
 - **权限要求**: 公开（普通用户可访问）
+
+#### 3.11 按房型查询房间
+
+- **接口路径**: `/api/rooms/room-type/:roomTypeId`
+- **请求方法**: GET
+- **功能描述**: 根据房型 ID 获取房间列表
+- **请求参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  | --- | --- | --- | --- |
+  | roomTypeId | number | 是 | 房型 ID |
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    [
+      {
+        "id": 1,
+        "roomNumber": "101",
+        "roomPrice": 200,
+        "roomStatus": 1,
+        "roomTypeId": 1,
+        "hotelId": 1
+      },
+      {
+        "id": 3,
+        "roomNumber": "103",
+        "roomPrice": 200,
+        "roomStatus": 1,
+        "roomTypeId": 1,
+        "hotelId": 1
+      }
+    ]
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "获取房型房间失败"
+    }
+    ```
+- **权限要求**: 公开（普通用户可访问）
+
+#### 3.12 按酒店查询可用房间
+
+- **接口路径**: `/api/rooms/hotel/:hotelId/available`
+- **请求方法**: GET
+- **功能描述**: 根据酒店 ID 获取可用房间列表
+- **请求参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  | --- | --- | --- | --- |
+  | hotelId | number | 是 | 酒店 ID |
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    [
+      {
+        "id": 1,
+        "roomNumber": "101",
+        "roomPrice": 200,
+        "roomStatus": 1,
+        "roomTypeId": 1,
+        "hotelId": 1
+      }
+    ]
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "获取酒店可用房间失败"
+    }
+    ```
+- **权限要求**: 公开（普通用户可访问）
+
+#### 3.13 更新房间状态
+
+- **接口路径**: `/api/rooms/:id/status`
+- **请求方法**: PUT
+- **功能描述**: 更新房间状态
+- **请求参数**:
+  | 参数名 | 类型 | 必填 | 描述 |
+  | --- | --- | --- | --- |
+  | id | number | 是 | 房间 ID |
+  | status | number | 是 | 房间状态（1: 空闲, 2: 已预订, 3: 已入住, 4: 维修中） |
+- **响应格式**:
+  - **成功响应**:
+    ```json
+    {
+      "id": 1,
+      "roomNumber": "101",
+      "roomPrice": 200,
+      "roomStatus": 2,
+      "roomTypeId": 1,
+      "hotelId": 1
+    }
+    ```
+  - **失败响应**:
+    ```json
+    {
+      "error": "无效的房间状态"
+    }
+    ```
+    ```json
+    {
+      "error": "房间不存在"
+    }
+    ```
+    ```json
+    {
+      "error": "更新房间状态失败"
+    }
+    ```
+- **权限要求**: 需要酒店管理员或系统管理员权限
 
 ### 4. 订单模块
 
