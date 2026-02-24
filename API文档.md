@@ -311,6 +311,8 @@
         "id": 1,
         "hotelName": "酒店1",
         "hotelAddress": "地址1",
+        "latitude": 31.230416,
+        "longitude": 121.473701,
         "hotelPhone": "1234567890",
         "hotelStatus": 1,
         "hotelRegion": 1
@@ -319,6 +321,8 @@
         "id": 2,
         "hotelName": "酒店2",
         "hotelAddress": "地址2",
+        "latitude": 22.543096,
+        "longitude": 114.057865,
         "hotelPhone": "0987654321",
         "hotelStatus": 1,
         "hotelRegion": 2
@@ -349,6 +353,8 @@
       "id": 1,
       "hotelName": "酒店1",
       "hotelAddress": "地址1",
+      "latitude": 31.230416,
+      "longitude": 121.473701,
       "hotelPhone": "1234567890",
       "hotelStatus": 1,
       "hotelRegion": 1
@@ -377,6 +383,8 @@
   | --- | --- | --- | --- |
   | hotelName | string | 是 | 酒店名称 |
   | hotelAddress | string | 是 | 酒店地址 |
+  | latitude | number | 否 | 酒店纬度 |
+  | longitude | number | 否 | 酒店经度 |
   | hotelPhone | string | 是 | 酒店电话 |
   | hotelStatus | number | 是 | 酒店状态（1: 正常, 2: 暂停营业） |
   | hotelRegion | number | 是 | 酒店地区（1: 地区1, 2: 地区2, 3: 地区3, 4: 地区4, 5: 地区5） |
@@ -388,6 +396,8 @@
       "id": 3,
       "hotelName": "酒店3",
       "hotelAddress": "地址3",
+      "latitude": 23.129110,
+      "longitude": 113.264385,
       "hotelPhone": "1112223333",
       "hotelStatus": 1,
       "hotelRegion": 3
@@ -412,6 +422,8 @@
   | id | number | 是 | 酒店 ID |
   | hotelName | string | 否 | 酒店名称 |
   | hotelAddress | string | 否 | 酒店地址 |
+  | latitude | number | 否 | 酒店纬度 |
+  | longitude | number | 否 | 酒店经度 |
   | hotelPhone | string | 否 | 酒店电话 |
   | hotelStatus | number | 否 | 酒店状态（1: 正常, 2: 暂停营业） |
   | hotelRegion | number | 否 | 酒店地区（1: 地区1, 2: 地区2, 3: 地区3, 4: 地区4, 5: 地区5） |
@@ -423,6 +435,8 @@
       "id": 1,
       "hotelName": "酒店1更新",
       "hotelAddress": "地址1更新",
+      "latitude": 31.230416,
+      "longitude": 121.473701,
       "hotelPhone": "1234567890",
       "hotelStatus": 1,
       "hotelRegion": 1

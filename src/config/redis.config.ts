@@ -1,12 +1,24 @@
 import { createClient } from 'redis';
+import dotenv from 'dotenv';
+
+dotenv.config({ override: true });
 
 /**
  * Redis客户端配置
  */
-const ipAddress = '192.168.19.128';
+const host = '127.0.0.1';
+const port = 6379;
 
 export const redisClient = createClient({
-  url: `redis://${ipAddress}:6379` // Redis服务器地址
+  socket: {
+    host,
+    port,
+    connectTimeout: 3000
+  }
+});
+
+redisClient.on('error', (error) => {
+  console.error('Redis客户端错误:', error);
 });
 
 /**
@@ -14,6 +26,7 @@ export const redisClient = createClient({
  */
 export const initializeRedis = async (): Promise<void> => {
   try {
+    console.log(`Redis连接中: ${host}:${port}`);
     await redisClient.connect();
     console.log('Redis连接成功');
   } catch (error) {

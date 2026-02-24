@@ -1,5 +1,6 @@
 import 'reflect-metadata';
 import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
 import { AppDataSource } from './config/typeorm.config';
 import userRoutes from './routes/user.routes';
 import hotelRoutes from './routes/hotel.routes';
@@ -12,6 +13,14 @@ import { ElasticsearchService } from './services/elasticsearch.service';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// CORS配置 - 允许前端跨域请求
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || 'http://localhost:3001', // 修改为你的前端地址
+  credentials: true, // 允许发送credentials
+  optionsSuccessStatus: 200
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
