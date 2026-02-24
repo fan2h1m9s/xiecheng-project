@@ -13,11 +13,11 @@ dotenv.config();
 
 export const typeOrmConfig: DataSourceOptions = {
   type: 'mysql',
-  host: process.env.DB_HOST || 'localhost',
-  port: parseInt(process.env.DB_PORT || '3306', 10),
+  host: process.env.DB_HOST || 'sh-cynosdbmysql-grp-32u86s4e.sql.tencentcdb.com',
+  port: parseInt(process.env.DB_PORT || '22961', 10),
   username: process.env.DB_USERNAME || 'root',
-  password: process.env.DB_PASSWORD || '123456',
-  database: process.env.DB_DATABASE || 'hotel',
+  password: process.env.DB_PASSWORD || 'wxh123456!',
+  database: process.env.DB_DATABASE || 'hotelServer',
   entities: [
     Address,
     User,
