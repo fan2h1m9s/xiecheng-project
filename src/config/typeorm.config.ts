@@ -32,6 +32,9 @@ export const typeOrmConfig: DataSourceOptions = {
   ],
   synchronize: process.env.DB_SYNCHRONIZE === 'true' || false,
   logging: process.env.DB_LOGGING === 'true' || true,
+  extra: {
+    charset: 'utf8mb4'
+  }
 };
 
 export const AppDataSource = new DataSource(typeOrmConfig);
