@@ -4,6 +4,7 @@ import Taro from '@tarojs/taro'
 import './index.scss'
 import { AMAP_KEY } from '../../config/map-keys'
 import hotelCover from '../../assets/icons/hotelExp.jpg'
+import { getHotels, type HotelApiItem } from '../../services/hotel'
 
 const { AMapWX } = require('../../utils/amap-wx')
 
@@ -23,49 +24,34 @@ type HotelItem = {
   cover: string
 }
 
-const MOCK_HOTELS: HotelItem[] = [
-  {
-    id: 101,
-    name: '城央臻选酒店',
-    latitude: 22.543585,
-    longitude: 114.05951,
-    address: '福田区福华一路 88 号',
-    price: 528,
-    rating: 4.7,
-    cover: hotelCover
-  },
-  {
-    id: 102,
-    name: '云际观景酒店',
-    latitude: 22.541707,
-    longitude: 114.05521,
-    address: '福田区金田路 18 号',
-    price: 688,
-    rating: 4.8,
-    cover: hotelCover
-  },
-  {
-    id: 103,
-    name: '湾畔逸居酒店',
-    latitude: 22.546181,
-    longitude: 114.06272,
-    address: '福田区深南大道 3008 号',
-    price: 458,
-    rating: 4.5,
+const normalizeHotelForMap = (hotel: HotelApiItem, index: number): HotelItem => {
+  const stars = Number(hotel.hotelStars || 0)
+  const parsedLatitude = Number(hotel.latitude)
+  const parsedLongitude = Number(hotel.longitude)
+  const hasGeo = Number.isFinite(parsedLatitude) && Number.isFinite(parsedLongitude)
+  return {
+    id: hotel.id,
+    name: hotel.hotelNameZh || hotel.hotelNameEn || '未命名酒店',
+    latitude: hasGeo ? parsedLatitude : DEFAULT_COORD.latitude + (index % 3) * 0.002 - 0.002,
+    longitude: hasGeo ? parsedLongitude : DEFAULT_COORD.longitude + (index % 3) * 0.002 - 0.002,
+    address: hotel.hotelAddress || '暂无地址信息',
+    price: 0,
+    rating: stars > 0 ? Math.min(5, Number((stars / 2).toFixed(1))) : 4.5,
     cover: hotelCover
   }
-]
+}
 
 export default function HotelMap() {
   const [center, setCenter] = useState(DEFAULT_COORD)
   const [address, setAddress] = useState('定位中')
   const [selectedHotel, setSelectedHotel] = useState<HotelItem | null>(null)
+  const [hotels, setHotels] = useState<HotelItem[]>([])
   const scale = 14
   const useHighAccuracy = true
 
   const circles = useMemo(
     () =>
-      MOCK_HOTELS.map(hotel => ({
+      hotels.map(hotel => ({
         latitude: hotel.latitude,
         longitude: hotel.longitude,
         color: '#ff3b30',
@@ -73,7 +59,7 @@ export default function HotelMap() {
         radius: 30,
         strokeWidth: 2
       })),
-    []
+    [hotels]
   )
 
   const locate = () => {
@@ -131,7 +117,7 @@ export default function HotelMap() {
     const longitude = event?.detail?.longitude
     if (typeof latitude !== 'number' || typeof longitude !== 'number') return
     let nearest: { hotel: HotelItem; distance: number } | null = null
-    MOCK_HOTELS.forEach(hotel => {
+    hotels.forEach(hotel => {
       const distance = calcDistanceMeters(latitude, longitude, hotel.latitude, hotel.longitude)
       if (!nearest || distance < nearest.distance) {
         nearest = { hotel, distance }
@@ -152,6 +138,23 @@ export default function HotelMap() {
 
   useEffect(() => {
     locate()
+  }, [])
+
+  useEffect(() => {
+    const loadHotels = async () => {
+      try {
+        const data = await getHotels()
+        const list = data.map(normalizeHotelForMap)
+        setHotels(list)
+        if (list.length > 0) {
+          setCenter({ latitude: list[0].latitude, longitude: list[0].longitude })
+        }
+      } catch (error) {
+        Taro.showToast({ title: '酒店地图数据加载失败', icon: 'none' })
+      }
+    }
+
+    loadHotels()
   }, [])
 
   return (
@@ -197,7 +200,7 @@ export default function HotelMap() {
       <View className="debug-card-panel">
         <View className="debug-card-title">调试酒店卡片</View>
         <ScrollView className="debug-card-list" scrollX>
-          {MOCK_HOTELS.map(hotel => (
+          {hotels.map(hotel => (
             <View
               className="debug-card-item"
               key={hotel.id}

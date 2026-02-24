@@ -1,8 +1,10 @@
 import { View, Image, Text } from '@tarojs/components'
+import React, { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
+import { getHotelById } from '../../services/hotel'
 
-type HotelDetail = {
+type HotelDetailData = {
   id: number
   name: string
   address: string
@@ -14,62 +16,47 @@ type HotelDetail = {
   description: string
 }
 
-const MOCK_DETAILS: HotelDetail[] = [
-  {
-    id: 101,
-    name: '城央臻选酒店',
-    address: '福田区福华一路 88 号',
-    price: 528,
-    rating: 4.7,
-    cover: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    tags: ['地铁直达', '商务出行', '自助早餐'],
-    highlights: ['24 小时前台服务', '高空景观酒廊', '健身房与洗衣房'],
-    description:
-      '酒店位于福田核心商务区，步行可达会展中心。客房采用简约设计与智能控制，提供舒适睡眠体验。'
-  },
-  {
-    id: 102,
-    name: '云际观景酒店',
-    address: '福田区金田路 18 号',
-    price: 688,
-    rating: 4.8,
-    cover: 'https://images.pexels.com/photos/262048/pexels-photo-262048.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    tags: ['城市景观', '情侣优选', '高层泳池'],
-    highlights: ['空中无边际泳池', '行政酒廊', '大堂咖啡吧'],
-    description:
-      '坐拥城市天际线与湾区夜景，配备高端餐饮与休闲设施，适合度假与高端商务接待。'
-  },
-  {
-    id: 103,
-    name: '湾畔逸居酒店',
-    address: '福田区深南大道 3008 号',
-    price: 458,
-    rating: 4.5,
-    cover: 'https://images.pexels.com/photos/271618/pexels-photo-271618.jpeg?auto=compress&cs=tinysrgb&w=1200',
-    tags: ['亲子友好', '免费停车', '近商圈'],
-    highlights: ['亲子活动区', '智能门锁', '快速退房'],
-    description:
-      '毗邻大型商圈与公园，提供丰富亲子配套及便捷出行服务，适合家庭与轻度度假人群。'
-  }
-]
+const DEFAULT_DETAIL: HotelDetailData = {
+  id: 0,
+  name: '酒店详情',
+  address: '暂未获取酒店地址',
+  price: 0,
+  rating: 0,
+  cover: 'https://images.pexels.com/photos/261156/pexels-photo-261156.jpeg?auto=compress&cs=tinysrgb&w=1200',
+  tags: ['待接入数据库'],
+  highlights: ['酒店信息将从数据库获取'],
+  description: '当前展示为本地兜底信息，接口返回后会自动更新。'
+}
 
 export default function HotelDetail() {
   const params = Taro.getCurrentInstance().router?.params || {}
   const hotelId = Number(params.id)
-  const detail =
-    MOCK_DETAILS.find(item => item.id === hotelId) ||
-    ({
-      id: 0,
-      name: '酒店详情',
-      address: '暂未获取酒店地址',
-      price: 0,
-      rating: 0,
-      cover:
-        'https://images.pexels.com/photos/261156/pexels-photo-261156.jpeg?auto=compress&cs=tinysrgb&w=1200',
-      tags: ['待接入数据库'],
-      highlights: ['酒店信息将从数据库获取'],
-      description: '当前展示为本地模拟数据，后续将替换为真实酒店详情。'
-    } as HotelDetail)
+  const [detail, setDetail] = useState<HotelDetailData>(DEFAULT_DETAIL)
+
+  useEffect(() => {
+    const loadDetail = async () => {
+      if (!hotelId) return
+      try {
+        const data = await getHotelById(hotelId)
+        const stars = Number(data.hotelStars || 0)
+        setDetail({
+          id: data.id,
+          name: data.hotelNameZh || data.hotelNameEn || '未命名酒店',
+          address: data.hotelAddress || '暂无地址信息',
+          price: 0,
+          rating: stars > 0 ? Math.min(5, Number((stars / 2).toFixed(1))) : 4.5,
+          cover: DEFAULT_DETAIL.cover,
+          tags: ['真实数据'],
+          highlights: ['后端数据库酒店详情'],
+          description: data.hotelDis || '暂无酒店介绍'
+        })
+      } catch (error) {
+        Taro.showToast({ title: '详情加载失败', icon: 'none' })
+      }
+    }
+
+    loadDetail()
+  }, [hotelId])
 
   return (
     <View className="hotel-detail-page">

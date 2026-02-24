@@ -5,7 +5,8 @@ export default defineAppConfig({
     'pages/hotel-map/index',
     'pages/hotel-detail/index',
     'pages/date-select/index',
-    'pages/city-select/index'
+    'pages/city-select/index',
+    'pages/search/index'
   ],
   window: {
     backgroundTextStyle: 'light',

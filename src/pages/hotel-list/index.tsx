@@ -1,50 +1,50 @@
-import { View, Text, Image, Picker } from '@tarojs/components'
-import React, { useEffect, useMemo, useState } from 'react'
+import { View, Text, Image } from '@tarojs/components'
+import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import hotelPlaceholder from '../../assets/icons/hotelExp.jpg'
 import searchIcon from '../../assets/icons/OIP.jpg'
 import mapIcon from '../../assets/icons/map.jpg'
+import { getHotels, type HotelApiItem } from '../../services/hotel'
 const { AMapWX } = require('../../utils/amap-wx')
 
-const mockHotels = [
-  {
-    id: 1,
-    name: '豪华酒店A',
-    rating: 4.8,
-    favorites: 2341,
-    reviews: 1203,
-    location: '上海 · 静安寺',
-    tags: ['方便停车', '机器人服务', '靠近地铁站'],
-    price: 399,
-    distanceKm: 1.8,
-    image: hotelPlaceholder
-  },
-  {
-    id: 2,
-    name: '舒适酒店B',
-    rating: 4.5,
-    favorites: 985,
-    reviews: 642,
-    location: '北京 · 国贸',
-    tags: ['早餐丰富', '健身房', '亲子友好'],
-    price: 299,
-    distanceKm: 3.2,
-    image: hotelPlaceholder
-  },
-  {
-    id: 3,
-    name: '经济酒店C',
-    rating: 4.2,
-    favorites: 412,
-    reviews: 218,
-    location: '广州 · 天河',
-    tags: ['靠近地铁站', '自助入住', '安静舒适'],
-    price: 199,
-    distanceKm: 0.9,
+const DEBUG_HOTEL_FLOW = typeof process !== 'undefined' && process.env
+  ? process.env.NODE_ENV !== 'production'
+  : true
+
+const debugLog = (...args: any[]) => {
+  if (!DEBUG_HOTEL_FLOW) return
+  console.log('[HotelFlow][HotelList]', ...args)
+}
+
+type HotelListItem = {
+  id: number
+  name: string
+  rating: number
+  favorites: number
+  reviews: number
+  location: string
+  tags: string[]
+  price: number
+  distanceKm: number
+  image: string
+}
+
+const normalizeHotel = (hotel: HotelApiItem): HotelListItem => {
+  const stars = Number(hotel.hotelStars || 0)
+  return {
+    id: hotel.id,
+    name: hotel.hotelNameZh || hotel.hotelNameEn || '未命名酒店',
+    rating: stars > 0 ? Math.min(5, Number((stars / 2).toFixed(1))) : 4.5,
+    favorites: 0,
+    reviews: 0,
+    location: hotel.hotelAddress || '暂无地址信息',
+    tags: ['真实数据'],
+    price: 0,
+    distanceKm: 0,
     image: hotelPlaceholder
   }
-]
+}
 
 export default function HotelList() {
   const [showFilter, setShowFilter] = useState(false)
@@ -58,6 +58,9 @@ export default function HotelList() {
   const [checkOutDate, setCheckOutDate] = useState('2026-02-12')
   const [bookingGuests, setBookingGuests] = useState('1间房，1成人，0儿童')
   const [guestDraft, setGuestDraft] = useState({ rooms: 1, adults: 1, children: 1 })
+  const [hotels, setHotels] = useState<HotelListItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [searchKeyword, setSearchKeyword] = useState('')
 
   const AMAP_KEY = 'f797b890e4324fcb4f7d7e2dab927978'
 
@@ -71,9 +74,11 @@ export default function HotelList() {
   }
 
   const fetchCurrentLocation = () => {
+    debugLog('fetchCurrentLocation start')
     const amap = new AMapWX({ key: AMAP_KEY })
     amap.getRegeo({
       success: (res: any) => {
+        debugLog('fetchCurrentLocation success', res)
         const first = Array.isArray(res) ? res[0] : res
         const address = first && first.addressComponent ? first.addressComponent : null
         const city = address && address.city ? address.city : (address && address.province ? address.province : '')
@@ -81,7 +86,8 @@ export default function HotelList() {
         const display = [city, name].filter(Boolean).join(' · ')
         setCurrentLocation(display || '已定位')
       },
-      fail: () => {
+      fail: (err: any) => {
+        debugLog('fetchCurrentLocation fail', err)
         setCurrentLocation('定位失败')
       }
     })
@@ -89,6 +95,7 @@ export default function HotelList() {
 
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params || {}
+    debugLog('router params on mount', params)
     const cityParam = safeDecode(params.city)
     const keywordParam = safeDecode(params.keyword)
     const checkInParam = safeDecode(params.checkIn)
@@ -97,6 +104,7 @@ export default function HotelList() {
       setBookingCity(cityParam)
     }
     if (keywordParam) {
+      setSearchKeyword(keywordParam)
       setCurrentLocation(keywordParam)
     } else if (cityParam) {
       setCurrentLocation(cityParam)
@@ -108,7 +116,10 @@ export default function HotelList() {
   useEffect(() => {
     const params = Taro.getCurrentInstance().router?.params || {}
     const cityParam = safeDecode(params.city)
-    if (cityParam) return
+    if (cityParam) {
+      debugLog('skip geolocation because city passed from previous page', cityParam)
+      return
+    }
     fetchCurrentLocation()
   }, [])
 
@@ -116,6 +127,27 @@ export default function HotelList() {
     if (!bookingCity) return
     Taro.setNavigationBarTitle({ title: bookingCity })
   }, [bookingCity])
+
+  useEffect(() => {
+    const loadHotels = async () => {
+      setLoading(true)
+      debugLog('loadHotels start', { bookingCity, checkInDate, checkOutDate })
+      try {
+        const data = await getHotels()
+        debugLog('loadHotels success', { count: Array.isArray(data) ? data.length : 0 })
+        setHotels(data.map(normalizeHotel))
+      } catch (error) {
+        debugLog('loadHotels fail', error)
+        const message = error instanceof Error ? error.message : '酒店数据加载失败'
+        Taro.showToast({ title: message.slice(0, 18), icon: 'none' })
+      } finally {
+        setLoading(false)
+        debugLog('loadHotels end')
+      }
+    }
+
+    loadHotels()
+  }, [])
 
   // 筛选选项数据
   const filterSections = [
@@ -131,7 +163,6 @@ export default function HotelList() {
     { key: 'rating', label: '评分' }
   ]
 
-  const cityOptions = ['深圳', '北京', '上海', '广州', '杭州', '成都']
   const formatShortDate = (value: string) => {
     if (!value) return ''
     return value.length >= 10 ? value.slice(5) : value
@@ -203,6 +234,21 @@ export default function HotelList() {
     })
   }
 
+  const openSearchPage = () => {
+    const url = `/pages/search/index?keyword=${encodeURIComponent(searchKeyword)}&city=${encodeURIComponent(bookingCity)}`
+    Taro.navigateTo({
+      url,
+      events: {
+        keywordSelected: data => {
+          if (data?.keyword !== undefined) {
+            setSearchKeyword(data.keyword)
+            setCurrentLocation(data.keyword || bookingCity)
+          }
+        }
+      }
+    })
+  }
+
   const SettingItem = ({ caption, value, needIcon, type }: {
     caption: string; value: string; needIcon: boolean; type: string;
   }) => {
@@ -225,7 +271,7 @@ export default function HotelList() {
   }
 
   const sortedHotels = useMemo(() => {
-    const sorted = [...mockHotels]
+    const sorted = [...hotels]
     sorted.sort((a, b) => {
       if (activeFilter === 'price') return a.price - b.price
       if (activeFilter === 'distance') return a.distanceKm - b.distanceKm
@@ -233,7 +279,7 @@ export default function HotelList() {
       return 0
     })
     return sorted
-  }, [activeFilter])
+  }, [activeFilter, hotels])
 
   return (
     <View className="hotel-list-page">
@@ -259,13 +305,11 @@ export default function HotelList() {
             </View>
             <View
               className="searchCard"
-              onClick={() => {
-                Taro.showToast({ title: '搜索功能待接入', icon: 'none' })
-              }}
+              onClick={openSearchPage}
             >
               <Image className="searchIcon" src={searchIcon} mode="aspectFit" />
               <View className="searchInput">
-                <Text className="searchPlaceholder">位置/品牌/酒店</Text>
+                <Text className="searchPlaceholder">{searchKeyword || '位置/品牌/酒店'}</Text>
               </View>
             </View>
           </View>
@@ -436,6 +480,8 @@ export default function HotelList() {
 
       {/* 酒店列表 */}
       <View className="hotel-list-content">
+        {loading && <View className="hotel-item">酒店加载中...</View>}
+        {!loading && sortedHotels.length === 0 && <View className="hotel-item">暂无酒店数据</View>}
         {sortedHotels.map(hotel => (
           <View 
             key={hotel.id} 

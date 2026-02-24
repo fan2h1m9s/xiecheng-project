@@ -1,211 +1,271 @@
 .index {
-  background-color: #f5f5f5;
   min-height: 100vh;
+  background: #f7f7f7;
+  padding-top: 20rpx;
+  padding-bottom: 30rpx;
 }
 
-/* 顶部 Banner 广告 */
+.banner-wrapper {
+  margin: 0 24rpx 20rpx;
+  border-radius: 18rpx;
+  border: 1rpx solid #e6e6e6;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  background: #ffffff;
+}
+
 .banner {
   width: 100%;
-  height: 160px;
+  height: 280rpx;
   overflow: hidden;
-  
+
   .banner-img {
     width: 100%;
     height: 100%;
   }
 }
 
-/* 核心查询区域 */
 .search-container {
-  background: white;
-  padding: 0 15px 20px;
+  margin: 0 24rpx 0;
+  background: #ffffff;
+  border: 1rpx solid #e6e6e6;
+  border-radius: 18rpx;
+  box-shadow: 0 8rpx 20rpx rgba(0, 0, 0, 0.06);
+  padding: 0 24rpx 26rpx;
+  box-sizing: border-box;
 }
 
-/* Tab 切换 */
 .tabs {
   display: flex;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  
+  padding: 24rpx 0 16rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+
   .tab-item {
     flex: 1;
     text-align: center;
-    font-size: 16px;
-    color: #333;
+    font-size: 28rpx;
+    color: #666;
     position: relative;
-    padding-bottom: 10px;
-    
+    padding-bottom: 14rpx;
+    font-weight: 500;
+
     &.active {
-      color: #1677ff;
-      font-weight: bold;
-      
+      color: #fd7a33;
+      font-weight: 600;
+
       &::after {
         content: '';
         position: absolute;
         bottom: 0;
         left: 50%;
         transform: translateX(-50%);
-        width: 30px;
-        height: 3px;
-        background: #1677ff;
-        border-radius: 2px;
+        width: 36rpx;
+        height: 4rpx;
+        border-radius: 999rpx;
+        background: #fd7a33;
       }
     }
   }
 }
 
-/* 城市选择 + 关键字搜索 */
 .location-search {
   display: flex;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  
+  gap: 10rpx;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+
   .city-selector {
+    min-width: 182rpx;
+    height: 72rpx;
+    border-radius: 36rpx;
+    border: 1rpx solid #e6e6e6;
     display: flex;
     align-items: center;
-    padding-right: 10px;
-    border-right: 1px solid #e0e0e0;
-    
-    .city-text {
-      font-size: 18px;
-      font-weight: bold;
-      color: #333;
-      margin-right: 5px;
-    }
-    
-    .arrow {
-      font-size: 12px;
+    justify-content: center;
+    padding: 0 14rpx;
+    box-sizing: border-box;
+    gap: 6rpx;
+
+    .city-caption {
+      font-size: 20rpx;
       color: #999;
+      white-space: nowrap;
+    }
+
+    .city-text {
+      font-size: 26rpx;
+      color: #333;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .arrow {
+      font-size: 18rpx;
+      color: #999;
+      transform: scale(0.9);
     }
   }
-  
+
   .search-input-wrapper {
     flex: 1;
-    padding: 0 10px;
-    
+    height: 72rpx;
+    border-radius: 36rpx;
+    border: 1rpx solid #e6e6e6;
+    background: #f7f7f7;
+    padding: 0 22rpx;
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+
     .search-input {
-      font-size: 15px;
+      width: 100%;
+      height: 100%;
+      font-size: 26rpx;
       color: #333;
-      
+      line-height: 1;
+      display: flex;
+      align-items: center;
+
+      .search-input-text {
+        color: #999;
+      }
+
       &::placeholder {
         color: #999;
       }
     }
   }
-  
+
   .location-icon {
-    padding: 5px;
-    
+    width: 72rpx;
+    height: 72rpx;
+    border-radius: 50%;
+    border: 1rpx solid #fdc3a5;
+    background: #fff5ef;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     .icon {
-      font-size: 24px;
-      color: #1677ff;
+      font-size: 32rpx;
+      line-height: 1;
     }
   }
 }
 
-/* 日期选择 */
 .date-selector {
   display: flex;
   align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+
   .date-item {
     flex: 1;
-    
+    min-width: 0;
+
     .date-text {
-      font-size: 16px;
-      font-weight: bold;
+      font-size: 28rpx;
       color: #333;
+      font-weight: 600;
     }
   }
-  
+
   .separator {
-    margin: 0 10px;
-    color: #999;
+    margin: 0 12rpx;
+    color: #bbb;
+    font-size: 24rpx;
   }
-  
+
   .night-count {
-    margin-left: 10px;
-    
+    margin-left: 12rpx;
+    padding: 8rpx 14rpx;
+    border-radius: 999rpx;
+    background: #fff5ef;
+
     text {
-      font-size: 14px;
-      color: #666;
+      color: #fd7a33;
+      font-size: 22rpx;
+      font-weight: 500;
     }
   }
 }
 
-/* 入住提示 */
 .check-in-tip {
   display: flex;
-  align-items: center;
-  background: #2c2c2c;
-  color: white;
-  padding: 8px 12px;
-  border-radius: 6px;
-  margin: 10px 0;
-  
+  align-items: flex-start;
+  margin: 16rpx 0 0;
+  padding: 14rpx 16rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #ffe0cf;
+  background: #fff7f3;
+
   .tip-icon {
-    margin-right: 8px;
-    font-size: 16px;
-  }
-  
-  .tip-text {
-    font-size: 12px;
+    margin-right: 10rpx;
+    font-size: 24rpx;
     line-height: 1.4;
   }
-}
 
-/* 价格/星级筛选 */
-.filter-section {
-  padding: 15px 0;
-  border-bottom: 1px solid #f0f0f0;
-  
-  .filter-text {
-    font-size: 15px;
-    color: #999;
+  .tip-text {
+    font-size: 22rpx;
+    line-height: 1.5;
+    color: #9c5b36;
   }
 }
 
-/* 快捷标签 */
+.filter-section {
+  margin-top: 16rpx;
+  padding: 20rpx;
+  border-radius: 14rpx;
+  border: 1rpx solid #ececec;
+  background: #fafafa;
+
+  .filter-text {
+    font-size: 26rpx;
+    color: #666;
+  }
+}
+
 .quick-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-  padding: 15px 0;
-  
+  gap: 12rpx;
+  padding: 18rpx 0 8rpx;
+
   .tag-item {
-    background: #f5f5f5;
-    padding: 8px 16px;
-    border-radius: 20px;
-    font-size: 14px;
+    padding: 10rpx 18rpx;
+    border-radius: 999rpx;
+    border: 1rpx solid #ececec;
+    background: #fafafa;
     color: #666;
-    
+    font-size: 24rpx;
+
     &.active {
-      background: #e6f4ff;
-      color: #1677ff;
+      border-color: #fdc3a5;
+      background: #fff1e8;
+      color: #fd7a33;
     }
   }
 }
 
-/* 查询按钮 */
 .search-button {
-  background: linear-gradient(135deg, #1677ff 0%, #0958d9 100%);
-  color: white;
-  text-align: center;
-  padding: 14px;
-  border-radius: 8px;
-  margin-top: 10px;
-  box-shadow: 0 4px 12px rgba(22, 119, 255, 0.3);
-  
+  margin-top: 20rpx;
+  height: 82rpx;
+  border-radius: 41rpx;
+  background: linear-gradient(90deg, #fd9a61 0%, #fd7a33 100%);
+  box-shadow: 0 8rpx 16rpx rgba(253, 122, 51, 0.24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
   .button-text {
-    font-size: 16px;
-    font-weight: bold;
-    letter-spacing: 2px;
+    color: #fff;
+    font-size: 30rpx;
+    font-weight: 600;
+    letter-spacing: 4rpx;
   }
-  
+
   &:active {
-    opacity: 0.8;
+    opacity: 0.86;
   }
 }

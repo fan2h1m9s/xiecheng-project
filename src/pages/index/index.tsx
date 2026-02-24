@@ -1,7 +1,21 @@
-import { View, Text, Image, Input, Picker } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
 import { useState, useEffect } from 'react'
 import './index.scss'
+import bannerImage from '../../assets/icons/hotelExp.jpg'
+
+const DEBUG_HOTEL_FLOW = typeof process !== 'undefined' && process.env
+  ? process.env.NODE_ENV !== 'production'
+  : true
+
+const debugLog = (...args: any[]) => {
+  if (!DEBUG_HOTEL_FLOW) return
+  console.log('[HotelFlow][Index]', ...args)
+}
+
+const BANNER_HOTEL_ID = 1
+const FILTER_OPTIONS = ['不限', '¥0-200', '¥200-500', '¥500以上', '三星及以下', '四星级', '五星级']
+const QUICK_TAGS = ['亲子', '豪华', '免费停车场', '含早餐', '近地铁', '高评分', '商务出行']
 
 export default function Index() {
   const [currentCity, setCurrentCity] = useState('上海')
@@ -72,7 +86,7 @@ export default function Index() {
 
   // 跳转到酒店详情页（Banner 广告）
   const handleBannerClick = () => {
-    Taro.navigateTo({ url: '/pages/hotel-detail/index' })
+    Taro.navigateTo({ url: `/pages/hotel-detail/index?id=${BANNER_HOTEL_ID}` })
   }
 
   // 定位功能
@@ -111,60 +125,62 @@ export default function Index() {
     })
   }
 
-  // 选择入住日期
-  const handleCheckInDateChange = (e) => {
-    const selectedDate = e.detail.value
-    setCheckInDate(selectedDate)
-    
-    const date = new Date(selectedDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    setCheckInDateStr(formatDateDisplay(date, date.getTime() === today.getTime()))
-    
-    // 如果入住日期晚于退房日期，自动调整退房日期
-    if (selectedDate >= checkOutDate) {
-      const nextDay = new Date(date)
-      nextDay.setDate(nextDay.getDate() + 1)
-      const nextDayStr = formatDate(nextDay)
-      setCheckOutDate(nextDayStr)
-      setCheckOutDateStr(formatDateDisplay(nextDay, false))
-    }
-    
-    setNightCount(calculateNights(selectedDate, checkOutDate))
+  // 打开搜索页
+  const openSearchPage = () => {
+    const url = `/pages/search/index?keyword=${encodeURIComponent(keyword)}&city=${encodeURIComponent(currentCity)}`
+    Taro.navigateTo({
+      url,
+      events: {
+        keywordSelected: data => {
+          if (data?.keyword !== undefined) {
+            setKeyword(data.keyword)
+          }
+        }
+      }
+    })
   }
 
-  // 选择退房日期
-  const handleCheckOutDateChange = (e) => {
-    const selectedDate = e.detail.value
-    
-    // 退房日期必须晚于入住日期
-    if (selectedDate <= checkInDate) {
-      Taro.showToast({ title: '退房日期必须晚于入住日期', icon: 'none' })
-      return
-    }
-    
-    setCheckOutDate(selectedDate)
-    const date = new Date(selectedDate)
-    setCheckOutDateStr(formatDateDisplay(date, false))
-    setNightCount(calculateNights(checkInDate, selectedDate))
+  // 跳转到日历页选择日期
+  const openDateSelect = () => {
+    const url = `/pages/date-select/index?checkIn=${encodeURIComponent(checkInDate)}&checkOut=${encodeURIComponent(checkOutDate)}`
+    Taro.navigateTo({
+      url,
+      events: {
+        dateSelected: data => {
+          if (!data?.checkIn || !data?.checkOut) return
+
+          setCheckInDate(data.checkIn)
+          setCheckOutDate(data.checkOut)
+
+          const selectedCheckIn = new Date(data.checkIn)
+          const selectedCheckOut = new Date(data.checkOut)
+          const today = new Date()
+          today.setHours(0, 0, 0, 0)
+
+          setCheckInDateStr(formatDateDisplay(selectedCheckIn, selectedCheckIn.getTime() === today.getTime()))
+          setCheckOutDateStr(formatDateDisplay(selectedCheckOut, false))
+          setNightCount(calculateNights(data.checkIn, data.checkOut))
+        }
+      }
+    })
   }
 
   // 价格/星级筛选
   const handleFilterClick = () => {
     Taro.showActionSheet({
-      itemList: ['不限', '经济型', '舒适型', '高档型', '豪华型', '三星级', '四星级', '五星级'],
+      itemList: FILTER_OPTIONS,
       success: (res) => {
-        const filters = ['不限', '经济型', '舒适型', '高档型', '豪华型', '三星级', '四星级', '五星级']
-        const selected = filters[res.tapIndex]
+        const selected = FILTER_OPTIONS[res.tapIndex]
         if (selected === '不限') {
           setPriceRange('')
           setStarLevel('')
         } else {
-          if (selected.includes('星级')) {
+          if (selected.includes('星')) {
             setStarLevel(selected)
+            setPriceRange('')
           } else {
             setPriceRange(selected)
+            setStarLevel('')
           }
         }
       }
@@ -182,14 +198,27 @@ export default function Index() {
 
   // 查询按钮
   const handleSearch = () => {
+    debugLog('handleSearch triggered', {
+      currentCity,
+      keyword,
+      checkInDate,
+      checkOutDate,
+      nightCount,
+      priceRange,
+      starLevel,
+      selectedTags
+    })
+
     // 验证必填项
     if (!currentCity) {
       Taro.showToast({ title: '请选择城市', icon: 'none' })
+      debugLog('validation failed: empty city')
       return
     }
     
     if (!checkInDate || !checkOutDate) {
       Taro.showToast({ title: '请选择入住日期', icon: 'none' })
+      debugLog('validation failed: empty date range')
       return
     }
 
@@ -202,11 +231,13 @@ export default function Index() {
     selectedCheckIn.setHours(0, 0, 0, 0)
     
     if (currentHour < 6 && selectedCheckIn.getTime() === today.getTime()) {
+      debugLog('show midnight reminder modal')
       Taro.showModal({
         title: '提示',
         content: '当前已过0点，如需今天凌晨6点前入住，请选择"今天凌晨"',
         confirmText: '继续查询',
         success: (res) => {
+          debugLog('midnight reminder result', res)
           if (res.confirm) {
             navigateToList()
           }
@@ -235,9 +266,23 @@ export default function Index() {
       .filter(([_, value]) => value)
       .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
       .join('&')
+
+    const url = `/pages/hotel-list/index?${queryString}`
+    debugLog('navigateToList start', { params, queryString, url })
     
     Taro.navigateTo({ 
-      url: `/pages/hotel-list/index?${queryString}`
+      url,
+      success: (res) => {
+        debugLog('navigateToList success', res)
+      },
+      fail: (err) => {
+        debugLog('navigateToList fail', err)
+        Taro.showModal({
+          title: '跳转失败',
+          content: err?.errMsg || '无法进入酒店列表页',
+          showCancel: false
+        })
+      }
     })
   }
 
@@ -248,12 +293,14 @@ export default function Index() {
   return (
     <View className='index'>
       {/* 顶部 Banner 广告 */}
-      <View className='banner' onClick={handleBannerClick}>
-        <Image 
-          src='https://img.zcool.cn/community/01f82e5a3f7cf4a801219b3f4d5e61.jpg@1280w_1l_2o_100sh.jpg'
-          className='banner-img'
-          mode='aspectFill'
-        />
+      <View className='banner-wrapper'>
+        <View className='banner' onClick={handleBannerClick}>
+          <Image 
+            src={bannerImage}
+            className='banner-img'
+            mode='aspectFill'
+          />
+        </View>
       </View>
 
       {/* 核心查询区域 */}
@@ -274,16 +321,14 @@ export default function Index() {
         {/* 城市选择 + 关键字搜索 */}
         <View className='location-search'>
           <View className='city-selector' onClick={handleCitySelect}>
+            <Text className='city-caption'>当前地点</Text>
             <Text className='city-text'>{currentCity}</Text>
             <Text className='arrow'>▼</Text>
           </View>
           <View className='search-input-wrapper'>
-            <Input
-              className='search-input'
-              placeholder='位置/品牌/酒店'
-              value={keyword}
-              onInput={(e) => setKeyword(e.detail.value)}
-            />
+            <View className='search-input' onClick={openSearchPage}>
+              <Text className='search-input-text'>{keyword || '位置/品牌/酒店'}</Text>
+            </View>
           </View>
           <View className='location-icon' onClick={handleLocation}>
             <Text className='icon'>📍</Text>
@@ -291,28 +336,14 @@ export default function Index() {
         </View>
 
         {/* 日期选择 */}
-        <View className='date-selector'>
-          <Picker 
-            mode='date' 
-            value={checkInDate}
-            start={formatDate(new Date())}
-            onChange={handleCheckInDateChange}
-          >
-            <View className='date-item'>
-              <Text className='date-text'>{checkInDateStr || '选择日期'}</Text>
-            </View>
-          </Picker>
+        <View className='date-selector' onClick={openDateSelect}>
+          <View className='date-item'>
+            <Text className='date-text'>{checkInDateStr || '选择入住日期'}</Text>
+          </View>
           <Text className='separator'>—</Text>
-          <Picker 
-            mode='date' 
-            value={checkOutDate}
-            start={checkInDate || formatDate(new Date())}
-            onChange={handleCheckOutDateChange}
-          >
-            <View className='date-item'>
-              <Text className='date-text'>{checkOutDateStr || '选择日期'}</Text>
-            </View>
-          </Picker>
+          <View className='date-item'>
+            <Text className='date-text'>{checkOutDateStr || '选择离店日期'}</Text>
+          </View>
           <View className='night-count'>
             <Text>共{nightCount}晚</Text>
           </View>
@@ -329,13 +360,13 @@ export default function Index() {
         {/* 价格/星级筛选 */}
         <View className='filter-section' onClick={handleFilterClick}>
           <Text className='filter-text'>
-            {priceRange || starLevel || '价格/星级'}
+            {priceRange || starLevel || '筛选条件：价格/星级'}
           </Text>
         </View>
 
         {/* 快捷标签 */}
         <View className='quick-tags'>
-          {['免费停车场', '上海浦东国际机场', '上海虹桥国际机场'].map(tag => (
+          {QUICK_TAGS.map(tag => (
             <View 
               key={tag}
               className={`tag-item ${selectedTags.includes(tag) ? 'active' : ''}`}
