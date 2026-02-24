@@ -1,6 +1,0 @@
-{
-  "navigationBarTitleText": "",
-  "usingComponents": {
-       "SelectCitiesView": "../../components/selectCity/selectCity"
-  }
-}

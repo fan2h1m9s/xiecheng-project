@@ -12,6 +12,15 @@ export type HotelApiItem = {
   longitude?: number | string
 }
 
+export type RoomTypeApiItem = {
+  id: number
+  roomTypeName: string
+  roomTypePrice: string | number
+  roomTypeDis?: string
+  roomTypeRest?: number
+  hotelId: number
+}
+
 export async function getHotels() {
   return request<HotelApiItem[]>({
     url: '/api/hotels',
@@ -22,6 +31,13 @@ export async function getHotels() {
 export async function getHotelById(id: number) {
   return request<HotelApiItem>({
     url: `/api/hotels/${id}`,
+    method: 'GET'
+  })
+}
+
+export async function getAllRoomTypes() {
+  return request<RoomTypeApiItem[]>({
+    url: '/api/rooms/types/all',
     method: 'GET'
   })
 }

@@ -5,7 +5,7 @@ import './index.scss'
 import hotelPlaceholder from '../../assets/icons/hotelExp.jpg'
 import searchIcon from '../../assets/icons/OIP.jpg'
 import mapIcon from '../../assets/icons/map.jpg'
-import { getHotels, type HotelApiItem } from '../../services/hotel'
+import { getHotels, getAllRoomTypes, type HotelApiItem } from '../../services/hotel'
 const { AMapWX } = require('../../utils/amap-wx')
 
 const DEBUG_HOTEL_FLOW = typeof process !== 'undefined' && process.env
@@ -47,11 +47,9 @@ const normalizeHotel = (hotel: HotelApiItem): HotelListItem => {
 }
 
 export default function HotelList() {
-  const [showFilter, setShowFilter] = useState(false)
   const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [showGuestPanel, setShowGuestPanel] = useState(false)
   const [activeFilter, setActiveFilter] = useState('distance')
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({})
   const [currentLocation, setCurrentLocation] = useState('定位中')
   const [bookingCity, setBookingCity] = useState('深圳')
   const [checkInDate, setCheckInDate] = useState('2026-02-11')
@@ -61,6 +59,7 @@ export default function HotelList() {
   const [hotels, setHotels] = useState<HotelListItem[]>([])
   const [loading, setLoading] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
+  const [locationSuffix, setLocationSuffix] = useState('')
 
   const AMAP_KEY = 'f797b890e4324fcb4f7d7e2dab927978'
 
@@ -80,11 +79,25 @@ export default function HotelList() {
       success: (res: any) => {
         debugLog('fetchCurrentLocation success', res)
         const first = Array.isArray(res) ? res[0] : res
-        const address = first && first.addressComponent ? first.addressComponent : null
-        const city = address && address.city ? address.city : (address && address.province ? address.province : '')
+        const regeoData = first && first.regeocodeData ? first.regeocodeData : null
+        const address = first && first.addressComponent
+          ? first.addressComponent
+          : (regeoData && regeoData.addressComponent ? regeoData.addressComponent : null)
+        const cityRaw = address && address.city ? address.city : ''
+        const city = Array.isArray(cityRaw)
+          ? (cityRaw[0] || '')
+          : (cityRaw || (address && address.province ? address.province : ''))
+        const district = address && address.district ? address.district : ''
+        const township = address && address.township ? address.township : ''
         const name = first && first.name ? first.name : ''
-        const display = [city, name].filter(Boolean).join(' · ')
-        setCurrentLocation(display || '已定位')
+        const display = [city, district, township, name].filter(Boolean).join(' · ')
+
+        if (city) {
+          setBookingCity(city)
+        }
+        setCurrentLocation(display || city || '已定位')
+        setLocationSuffix('')
+        setSearchKeyword('')
       },
       fail: (err: any) => {
         debugLog('fetchCurrentLocation fail', err)
@@ -94,7 +107,8 @@ export default function HotelList() {
   }
 
   useEffect(() => {
-    const params = Taro.getCurrentInstance().router?.params || {}
+    const currentInstance = Taro.getCurrentInstance()
+    const params = (currentInstance.router && currentInstance.router.params) || {}
     debugLog('router params on mount', params)
     const cityParam = safeDecode(params.city)
     const keywordParam = safeDecode(params.keyword)
@@ -102,19 +116,19 @@ export default function HotelList() {
     const checkOutParam = safeDecode(params.checkOut)
     if (cityParam) {
       setBookingCity(cityParam)
+      setCurrentLocation(cityParam)
     }
     if (keywordParam) {
       setSearchKeyword(keywordParam)
-      setCurrentLocation(keywordParam)
-    } else if (cityParam) {
-      setCurrentLocation(cityParam)
+      setLocationSuffix(keywordParam)
     }
     if (checkInParam) setCheckInDate(checkInParam)
     if (checkOutParam) setCheckOutDate(checkOutParam)
   }, [])
 
   useEffect(() => {
-    const params = Taro.getCurrentInstance().router?.params || {}
+    const currentInstance = Taro.getCurrentInstance()
+    const params = (currentInstance.router && currentInstance.router.params) || {}
     const cityParam = safeDecode(params.city)
     if (cityParam) {
       debugLog('skip geolocation because city passed from previous page', cityParam)
@@ -133,9 +147,24 @@ export default function HotelList() {
       setLoading(true)
       debugLog('loadHotels start', { bookingCity, checkInDate, checkOutDate })
       try {
-        const data = await getHotels()
-        debugLog('loadHotels success', { count: Array.isArray(data) ? data.length : 0 })
-        setHotels(data.map(normalizeHotel))
+        const [hotelsData, roomTypesData] = await Promise.all([
+          getHotels(),
+          getAllRoomTypes()
+        ])
+        debugLog('loadHotels success', { count: Array.isArray(hotelsData) ? hotelsData.length : 0 })
+        
+        // 计算每个酒店的最低房价
+        const hotelsWithPrice = hotelsData.map(hotel => {
+          const normalizedHotel = normalizeHotel(hotel)
+          const hotelRoomTypes = roomTypesData.filter(rt => rt.hotelId === hotel.id)
+          if (hotelRoomTypes.length > 0) {
+            const prices = hotelRoomTypes.map(rt => Number(rt.roomTypePrice || 0))
+            normalizedHotel.price = Math.min(...prices)
+          }
+          return normalizedHotel
+        })
+        
+        setHotels(hotelsWithPrice)
       } catch (error) {
         debugLog('loadHotels fail', error)
         const message = error instanceof Error ? error.message : '酒店数据加载失败'
@@ -150,12 +179,7 @@ export default function HotelList() {
   }, [])
 
   // 筛选选项数据
-  const filterSections = [
-    { caption: '酒店位置', value: currentLocation, needIcon: false, type: 'location' },
-    { caption: '行政区域', value: '南山区', needIcon: true, type: 'district' },
-    { caption: '商圈', value: 'xx商圈', needIcon: true, type: 'business' },
-    { caption: '地铁', value: '深大地铁站', needIcon: true, type: 'subway' }
-  ]
+  const currentLocationText = locationSuffix ? `${currentLocation} ${locationSuffix}` : currentLocation
 
   const sortOptions = [
     { key: 'price', label: '价格' },
@@ -212,22 +236,25 @@ export default function HotelList() {
       url,
       events: {
         dateSelected: data => {
-          if (data?.checkIn) setCheckInDate(data.checkIn)
-          if (data?.checkOut) setCheckOutDate(data.checkOut)
+          if (data && data.checkIn) setCheckInDate(data.checkIn)
+          if (data && data.checkOut) setCheckOutDate(data.checkOut)
         }
       }
     })
   }
 
   const openCitySelect = () => {
-    const url = `/pages/city-select/index?city=${encodeURIComponent(bookingCity)}`
+    const url = `/pages/search/index?city=${encodeURIComponent(bookingCity)}&tab=domestic&scene=city`
     Taro.navigateTo({
       url,
       events: {
-        citySelected: data => {
-          if (data?.city) {
-            setBookingCity(data.city)
-            setCurrentLocation(data.city)
+        keywordSelected: data => {
+          if (!data || data.keyword === undefined) return
+          if (data.isCity) {
+            setBookingCity(data.keyword)
+            setCurrentLocation(data.keyword)
+            setLocationSuffix('')
+            setSearchKeyword('')
           }
         }
       }
@@ -240,34 +267,20 @@ export default function HotelList() {
       url,
       events: {
         keywordSelected: data => {
-          if (data?.keyword !== undefined) {
-            setSearchKeyword(data.keyword)
-            setCurrentLocation(data.keyword || bookingCity)
+          if (data && data.keyword !== undefined) {
+            if (data.isCity) {
+              setBookingCity(data.keyword)
+              setCurrentLocation(data.keyword)
+              setLocationSuffix('')
+              setSearchKeyword('')
+            } else {
+              setSearchKeyword(data.keyword)
+              setLocationSuffix(data.keyword)
+            }
           }
         }
       }
     })
-  }
-
-  const SettingItem = ({ caption, value, needIcon, type }: {
-    caption: string; value: string; needIcon: boolean; type: string;
-  }) => {
-    const isSelected = selectedFilters[type] !== undefined
-    return (
-      <View
-        className={`settingItem ${isSelected ? 'selected' : ''}`}
-        onClick={() => {
-          setSelectedFilters(prev => ({
-            ...prev,
-            [type]: value || '已选择'
-          }))
-        }}
-      >
-        <Text className='caption'>{caption}</Text>
-        <Text className='value'>{value}</Text>
-        {needIcon && <View className='icon' />}
-      </View>
-    )
   }
 
   const sortedHotels = useMemo(() => {
@@ -325,7 +338,7 @@ export default function HotelList() {
             <View className="infoCardPanel">
               <View className="info-panel-line">
                 <View onClick={openCitySelect}>
-                  <Text>当前位置：{currentLocation}</Text>
+                  <Text>当前位置：{currentLocationText}</Text>
                 </View>
                 <View
                   className="location-btn"
@@ -440,43 +453,8 @@ export default function HotelList() {
               <Text className="sortLabel">{option.label}</Text>
             </View>
           ))}
-          <View
-            className="sortButton filterButton"
-            onClick={() => setShowFilter(!showFilter)}
-          >
-            <Text className="sortLabel">筛选</Text>
-          </View>
         </View>
       </View>
-
-
-      {/* 筛选面板 */}
-      {showFilter && (
-        <View className="filter-overlay">
-          <View className="filter-backdrop" onClick={() => setShowFilter(false)} />
-          <View className="filter-panel">
-            <View className="filterContent">
-              {filterSections.map((item, index) => (
-                <SettingItem 
-                  key={index}
-                  caption={item.caption}
-                  value={item.value}
-                  needIcon={item.needIcon}
-                  type={item.type}
-                />
-              ))}
-            </View>
-            <View className="filterMenu">
-              <Text className="clear" onClick={() => { setSelectedFilters({}); setShowFilter(false) }}>
-                清除筛选
-              </Text>
-              <Text className="confirm" onClick={() => setShowFilter(false)}>
-                确定
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
 
       {/* 酒店列表 */}
       <View className="hotel-list-content">

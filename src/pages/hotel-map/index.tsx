@@ -113,8 +113,9 @@ export default function HotelMap() {
   }
 
   const handleMapTap = (event: any) => {
-    const latitude = event?.detail?.latitude
-    const longitude = event?.detail?.longitude
+    const detail = event && event.detail ? event.detail : null
+    const latitude = detail ? detail.latitude : undefined
+    const longitude = detail ? detail.longitude : undefined
     if (typeof latitude !== 'number' || typeof longitude !== 'number') return
     let nearest: { hotel: HotelItem; distance: number } | null = null
     hotels.forEach(hotel => {
