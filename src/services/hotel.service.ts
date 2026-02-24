@@ -2,17 +2,20 @@ import { Repository } from 'typeorm';
 import { AppDataSource } from '../config/typeorm.config';
 import { Hotel } from '../entities/Hotel';
 import { Keyword } from '../entities/Keyword';
+import { KeywordRelation } from '../entities/KeywordRelation';
 import { ElasticsearchService } from './elasticsearch.service';
 
 export class HotelService {
   private hotelRepository: Repository<Hotel>;
   private keywordRepository: Repository<Keyword>;
+  private keywordRelationRepository: Repository<KeywordRelation>;
   private elasticsearchService: ElasticsearchService;
   private hasGeoColumnsCache: boolean | null = null;
 
   constructor() {
     this.hotelRepository = AppDataSource.getRepository(Hotel);
     this.keywordRepository = AppDataSource.getRepository(Keyword);
+    this.keywordRelationRepository = AppDataSource.getRepository(KeywordRelation);
     this.elasticsearchService = new ElasticsearchService();
   }
 
@@ -84,11 +87,24 @@ export class HotelService {
       // 处理关键词标签
       if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
-          const keywordEntity = this.keywordRepository.create({
-            keyName: keyword,
+          // 查找或创建关键词
+          let keywordEntity = await queryRunner.manager.findOne(Keyword, {
+            where: { keyName: keyword }
+          });
+          
+          if (!keywordEntity) {
+            keywordEntity = this.keywordRepository.create({
+              keyName: keyword
+            });
+            keywordEntity = await queryRunner.manager.save(keywordEntity);
+          }
+          
+          // 创建关键词关联
+          const keywordRelation = this.keywordRelationRepository.create({
+            keywordId: keywordEntity.id,
             hotelId: savedHotel.id
           });
-          await queryRunner.manager.save(keywordEntity);
+          await queryRunner.manager.save(keywordRelation);
         }
       }
       
@@ -123,17 +139,30 @@ export class HotelService {
       
       // 处理关键词标签
       if (updatedHotel && keywords !== undefined) {
-        // 删除现有的关键词记录
-        await queryRunner.manager.delete(Keyword, { hotelId: id });
+        // 删除现有的关键词关联记录
+        await queryRunner.manager.delete(KeywordRelation, { hotelId: id });
         
-        // 创建新的关键词记录
+        // 创建新的关键词关联记录
         if (keywords.length > 0) {
           for (const keyword of keywords) {
-            const keywordEntity = this.keywordRepository.create({
-              keyName: keyword,
+            // 查找或创建关键词
+            let keywordEntity = await queryRunner.manager.findOne(Keyword, {
+              where: { keyName: keyword }
+            });
+            
+            if (!keywordEntity) {
+              keywordEntity = this.keywordRepository.create({
+                keyName: keyword
+              });
+              keywordEntity = await queryRunner.manager.save(keywordEntity);
+            }
+            
+            // 创建关键词关联
+            const keywordRelation = this.keywordRelationRepository.create({
+              keywordId: keywordEntity.id,
               hotelId: updatedHotel.id
             });
-            await queryRunner.manager.save(keywordEntity);
+            await queryRunner.manager.save(keywordRelation);
           }
         }
       }
@@ -166,8 +195,8 @@ export class HotelService {
     await queryRunner.startTransaction();
     
     try {
-      // 删除相关的关键词记录
-      await queryRunner.manager.delete(Keyword, { hotelId: id });
+      // 删除相关的关键词关联记录
+      await queryRunner.manager.delete(KeywordRelation, { hotelId: id });
       
       await queryRunner.manager.delete(Hotel, id);
       

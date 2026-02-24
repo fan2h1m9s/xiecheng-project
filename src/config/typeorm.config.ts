@@ -7,6 +7,7 @@ import { Room } from '../entities/Room';
 import { Order } from '../entities/Order';
 import { OrderRoomRelation } from '../entities/OrderRoomRelation';
 import { Keyword } from '../entities/Keyword';
+import { KeywordRelation } from '../entities/KeywordRelation';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -26,7 +27,8 @@ export const typeOrmConfig: DataSourceOptions = {
     Room,
     Order,
     OrderRoomRelation,
-    Keyword
+    Keyword,
+    KeywordRelation
   ],
   synchronize: process.env.DB_SYNCHRONIZE === 'true' || false,
   logging: process.env.DB_LOGGING === 'true' || true,

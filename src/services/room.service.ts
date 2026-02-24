@@ -3,17 +3,20 @@ import { AppDataSource } from '../config/typeorm.config';
 import { Room } from '../entities/Room';
 import { RoomType } from '../entities/RoomType';
 import { Keyword } from '../entities/Keyword';
+import { KeywordRelation } from '../entities/KeywordRelation';
 import { RoomStatus } from '../enums/room-status.enum';
 
 export class RoomService {
   private roomRepository: Repository<Room>;
   private roomTypeRepository: Repository<RoomType>;
   private keywordRepository: Repository<Keyword>;
+  private keywordRelationRepository: Repository<KeywordRelation>;
 
   constructor() {
     this.roomRepository = AppDataSource.getRepository(Room);
     this.roomTypeRepository = AppDataSource.getRepository(RoomType);
     this.keywordRepository = AppDataSource.getRepository(Keyword);
+    this.keywordRelationRepository = AppDataSource.getRepository(KeywordRelation);
   }
 
   async findAll(): Promise<Room[]> {
@@ -65,11 +68,24 @@ export class RoomService {
       // 处理关键词标签
       if (keywords && keywords.length > 0) {
         for (const keyword of keywords) {
-          const keywordEntity = this.keywordRepository.create({
-            keyName: keyword,
+          // 查找或创建关键词
+          let keywordEntity = await queryRunner.manager.findOne(Keyword, {
+            where: { keyName: keyword }
+          });
+          
+          if (!keywordEntity) {
+            keywordEntity = this.keywordRepository.create({
+              keyName: keyword
+            });
+            keywordEntity = await queryRunner.manager.save(keywordEntity);
+          }
+          
+          // 创建关键词关联
+          const keywordRelation = this.keywordRelationRepository.create({
+            keywordId: keywordEntity.id,
             roomTypeId: savedRoomType.id
           });
-          await queryRunner.manager.save(keywordEntity);
+          await queryRunner.manager.save(keywordRelation);
         }
       }
       
@@ -101,17 +117,30 @@ export class RoomService {
       
       // 处理关键词标签
       if (updatedRoomType && keywords !== undefined) {
-        // 删除现有的关键词记录
-        await queryRunner.manager.delete(Keyword, { roomTypeId: id });
+        // 删除现有的关键词关联记录
+        await queryRunner.manager.delete(KeywordRelation, { roomTypeId: id });
         
-        // 创建新的关键词记录
+        // 创建新的关键词关联记录
         if (keywords.length > 0) {
           for (const keyword of keywords) {
-            const keywordEntity = this.keywordRepository.create({
-              keyName: keyword,
+            // 查找或创建关键词
+            let keywordEntity = await queryRunner.manager.findOne(Keyword, {
+              where: { keyName: keyword }
+            });
+            
+            if (!keywordEntity) {
+              keywordEntity = this.keywordRepository.create({
+                keyName: keyword
+              });
+              keywordEntity = await queryRunner.manager.save(keywordEntity);
+            }
+            
+            // 创建关键词关联
+            const keywordRelation = this.keywordRelationRepository.create({
+              keywordId: keywordEntity.id,
               roomTypeId: updatedRoomType.id
             });
-            await queryRunner.manager.save(keywordEntity);
+            await queryRunner.manager.save(keywordRelation);
           }
         }
       }
