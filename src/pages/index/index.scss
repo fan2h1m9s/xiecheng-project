@@ -154,6 +154,28 @@
   }
 }
 
+.location-detail-window {
+  margin-top: 16rpx;
+  padding: 14rpx 16rpx;
+  border-radius: 12rpx;
+  border: 1rpx solid #ececec;
+  background: #fafafa;
+}
+
+.location-detail-title {
+  display: block;
+  font-size: 20rpx;
+  color: #999;
+}
+
+.location-detail-text {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: #333;
+}
+
 .date-selector {
   display: flex;
   align-items: center;
@@ -210,19 +232,6 @@
     font-size: 22rpx;
     line-height: 1.5;
     color: #9c5b36;
-  }
-}
-
-.filter-section {
-  margin-top: 16rpx;
-  padding: 20rpx;
-  border-radius: 14rpx;
-  border: 1rpx solid #ececec;
-  background: #fafafa;
-
-  .filter-text {
-    font-size: 26rpx;
-    color: #666;
   }
 }
 

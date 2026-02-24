@@ -4,9 +4,10 @@ import Taro from '@tarojs/taro'
 import './index.scss'
 
 export default function DateSelect() {
-  const params = Taro.getCurrentInstance().router?.params
-  const [checkInDate, setCheckInDate] = useState(params?.checkIn || '')
-  const [checkOutDate, setCheckOutDate] = useState(params?.checkOut || '')
+  const currentInstance = Taro.getCurrentInstance()
+  const params = currentInstance.router ? currentInstance.router.params : undefined
+  const [checkInDate, setCheckInDate] = useState((params && params.checkIn) || '')
+  const [checkOutDate, setCheckOutDate] = useState((params && params.checkOut) || '')
 
   const parseDate = (value: string) => {
     if (!value) return null
@@ -93,8 +94,11 @@ export default function DateSelect() {
   const isPastDate = (value: Date) => value.getTime() < today.getTime()
 
   const submitSelection = (checkIn: string, checkOut: string) => {
-    const channel = Taro.getCurrentInstance().page?.getOpenerEventChannel?.()
-    channel?.emit('dateSelected', { checkIn, checkOut })
+    const page = Taro.getCurrentInstance().page
+    const channel = page && page.getOpenerEventChannel ? page.getOpenerEventChannel() : null
+    if (channel && channel.emit) {
+      channel.emit('dateSelected', { checkIn, checkOut })
+    }
     Taro.navigateBack()
   }
 

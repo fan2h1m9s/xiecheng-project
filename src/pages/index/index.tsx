@@ -1,8 +1,11 @@
 import { View, Text, Image } from '@tarojs/components'
 import Taro, { useDidShow } from '@tarojs/taro'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './index.scss'
 import bannerImage from '../../assets/icons/hotelExp.jpg'
+import { AMAP_KEY } from '../../config/map-keys'
+
+const { AMapWX } = require('../../utils/amap-wx')
 
 const DEBUG_HOTEL_FLOW = typeof process !== 'undefined' && process.env
   ? process.env.NODE_ENV !== 'production'
@@ -14,11 +17,11 @@ const debugLog = (...args: any[]) => {
 }
 
 const BANNER_HOTEL_ID = 1
-const FILTER_OPTIONS = ['不限', '¥0-200', '¥200-500', '¥500以上', '三星及以下', '四星级', '五星级']
 const QUICK_TAGS = ['亲子', '豪华', '免费停车场', '含早餐', '近地铁', '高评分', '商务出行']
 
 export default function Index() {
-  const [currentCity, setCurrentCity] = useState('上海')
+  const hasAutoLocatedRef = useRef(false)
+  const [currentCity, setCurrentCity] = useState('定位中')
   const [keyword, setKeyword] = useState('')
   const [checkInDate, setCheckInDate] = useState('')
   const [checkOutDate, setCheckOutDate] = useState('')
@@ -26,19 +29,28 @@ export default function Index() {
   const [checkOutDateStr, setCheckOutDateStr] = useState('')
   const [nightCount, setNightCount] = useState(1)
   const [selectedTab, setSelectedTab] = useState('国内')
-  const [priceRange, setPriceRange] = useState('')
-  const [starLevel, setStarLevel] = useState('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [locationSuffix, setLocationSuffix] = useState('')
+  const [locationAddress, setLocationAddress] = useState('正在获取定位地址...')
+
+  const normalizeCityName = (cityRaw: any, provinceRaw: any) => {
+    const cityFromRaw = Array.isArray(cityRaw)
+      ? (cityRaw[0] || '')
+      : (typeof cityRaw === 'string' ? cityRaw : '')
+    const provinceFromRaw = typeof provinceRaw === 'string' ? provinceRaw : ''
+    const cityName = cityFromRaw || provinceFromRaw
+    return cityName || ''
+  }
 
   // 初始化日期
   useEffect(() => {
     const today = new Date()
     const tomorrow = new Date(today)
     tomorrow.setDate(tomorrow.getDate() + 1)
-    
+
     const todayStr = formatDate(today)
     const tomorrowStr = formatDate(tomorrow)
-    
+
     setCheckInDate(todayStr)
     setCheckOutDate(tomorrowStr)
     setCheckInDateStr(formatDateDisplay(today, true))
@@ -92,18 +104,30 @@ export default function Index() {
   // 定位功能
   const handleLocation = () => {
     Taro.showLoading({ title: '正在定位...' })
-    
-    Taro.getLocation({
-      type: 'gcj02',
-      success: (res) => {
-        // 实际项目中需要调用逆地理编码 API 获取城市名
+
+    const amap = new AMapWX({ key: AMAP_KEY })
+    amap.getRegeo({
+      success: (res: any) => {
+        const first = Array.isArray(res) ? res[0] : res
+        const regeoData = first && first.regeocodeData ? first.regeocodeData : {}
+        const addressComponent = (first && first.addressComponent) || (regeoData && regeoData.addressComponent) || {}
+        const city = normalizeCityName(addressComponent.city, addressComponent.province)
+        const district = addressComponent.district || ''
+        const township = addressComponent.township || ''
+        const poiName = (first && first.name) || ''
+        const detailAddress = [city, district, township, poiName].filter(Boolean).join(' · ')
+        const resolvedCity = city || district || ''
+
         Taro.hideLoading()
+        if (resolvedCity) {
+          setCurrentCity(resolvedCity)
+        }
+        setLocationAddress(detailAddress || resolvedCity || '已定位')
         Taro.showToast({ title: '定位成功', icon: 'success' })
-        // 模拟定位结果
-        setCurrentCity('上海')
       },
       fail: () => {
         Taro.hideLoading()
+        setLocationAddress('定位失败，请检查定位权限')
         Taro.showModal({
           title: '定位失败',
           content: '请检查是否开启定位权限',
@@ -115,25 +139,41 @@ export default function Index() {
 
   // 选择城市
   const handleCitySelect = () => {
-    // 实际项目中应该跳转到城市选择页面
-    const cities = ['北京', '上海', '广州', '深圳', '杭州', '成都', '南京', '苏州', '西安', '重庆']
-    Taro.showActionSheet({
-      itemList: cities,
-      success: (res) => {
-        setCurrentCity(cities[res.tapIndex])
+    const initialTab = selectedTab === '海外' ? 'overseas' : 'domestic'
+    const url = `/pages/search/index?city=${encodeURIComponent(currentCity)}&tab=${initialTab}&scene=city`
+    Taro.navigateTo({
+      url,
+      events: {
+        keywordSelected: data => {
+          if (!data || data.keyword === undefined) return
+          if (data.isCity) {
+            setCurrentCity(data.keyword)
+            setLocationAddress(data.keyword)
+            setLocationSuffix('')
+          }
+        }
       }
     })
   }
 
   // 打开搜索页
   const openSearchPage = () => {
-    const url = `/pages/search/index?keyword=${encodeURIComponent(keyword)}&city=${encodeURIComponent(currentCity)}`
+    const initialTab = selectedTab === '海外' ? 'overseas' : 'domestic'
+    const url = `/pages/search/index?keyword=${encodeURIComponent(keyword)}&city=${encodeURIComponent(currentCity)}&tab=${initialTab}&scene=keyword`
     Taro.navigateTo({
       url,
       events: {
         keywordSelected: data => {
-          if (data?.keyword !== undefined) {
-            setKeyword(data.keyword)
+          if (data && data.keyword !== undefined) {
+            if (data.isCity) {
+              setCurrentCity(data.keyword)
+              setLocationAddress(data.keyword)
+              setLocationSuffix('')
+              setKeyword('')
+            } else {
+              setKeyword(data.keyword)
+              setLocationSuffix(data.keyword)
+            }
           }
         }
       }
@@ -147,7 +187,7 @@ export default function Index() {
       url,
       events: {
         dateSelected: data => {
-          if (!data?.checkIn || !data?.checkOut) return
+          if (!data || !data.checkIn || !data.checkOut) return
 
           setCheckInDate(data.checkIn)
           setCheckOutDate(data.checkOut)
@@ -160,28 +200,6 @@ export default function Index() {
           setCheckInDateStr(formatDateDisplay(selectedCheckIn, selectedCheckIn.getTime() === today.getTime()))
           setCheckOutDateStr(formatDateDisplay(selectedCheckOut, false))
           setNightCount(calculateNights(data.checkIn, data.checkOut))
-        }
-      }
-    })
-  }
-
-  // 价格/星级筛选
-  const handleFilterClick = () => {
-    Taro.showActionSheet({
-      itemList: FILTER_OPTIONS,
-      success: (res) => {
-        const selected = FILTER_OPTIONS[res.tapIndex]
-        if (selected === '不限') {
-          setPriceRange('')
-          setStarLevel('')
-        } else {
-          if (selected.includes('星')) {
-            setStarLevel(selected)
-            setPriceRange('')
-          } else {
-            setPriceRange(selected)
-            setStarLevel('')
-          }
         }
       }
     })
@@ -204,8 +222,6 @@ export default function Index() {
       checkInDate,
       checkOutDate,
       nightCount,
-      priceRange,
-      starLevel,
       selectedTags
     })
 
@@ -257,8 +273,6 @@ export default function Index() {
       checkIn: checkInDate,
       checkOut: checkOutDate,
       nights: nightCount,
-      priceRange: priceRange,
-      starLevel: starLevel,
       tags: selectedTags.join(',')
     }
     
@@ -279,7 +293,7 @@ export default function Index() {
         debugLog('navigateToList fail', err)
         Taro.showModal({
           title: '跳转失败',
-          content: err?.errMsg || '无法进入酒店列表页',
+          content: (err && err.errMsg) || '无法进入酒店列表页',
           showCancel: false
         })
       }
@@ -287,6 +301,8 @@ export default function Index() {
   }
 
   useDidShow(() => {
+    if (hasAutoLocatedRef.current) return
+    hasAutoLocatedRef.current = true
     handleLocation()
   })
 
@@ -307,7 +323,7 @@ export default function Index() {
       <View className='search-container'>
         {/* Tab 切换 */}
         <View className='tabs'>
-          {['国内', '海外', '钟点房', '民宿'].map(tab => (
+          {['国内', '海外'].map(tab => (
             <View 
               key={tab}
               className={`tab-item ${selectedTab === tab ? 'active' : ''}`}
@@ -319,15 +335,20 @@ export default function Index() {
         </View>
 
         {/* 城市选择 + 关键字搜索 */}
+        <View className='location-detail-window'>
+          <Text className='location-detail-title'>当前定位地址</Text>
+          <Text className='location-detail-text'>{locationAddress}</Text>
+        </View>
+
         <View className='location-search'>
           <View className='city-selector' onClick={handleCitySelect}>
             <Text className='city-caption'>当前地点</Text>
-            <Text className='city-text'>{currentCity}</Text>
+            <Text className='city-text'>{locationSuffix ? `${currentCity} ${locationSuffix}` : currentCity}</Text>
             <Text className='arrow'>▼</Text>
           </View>
           <View className='search-input-wrapper'>
             <View className='search-input' onClick={openSearchPage}>
-              <Text className='search-input-text'>{keyword || '位置/品牌/酒店'}</Text>
+              <Text className='search-input-text'>位置/品牌/酒店</Text>
             </View>
           </View>
           <View className='location-icon' onClick={handleLocation}>
@@ -356,13 +377,6 @@ export default function Index() {
             <Text className='tip-text'>当前已过0点，如需今天凌晨6点前入住，请选择"今天凌晨"</Text>
           </View>
         )}
-
-        {/* 价格/星级筛选 */}
-        <View className='filter-section' onClick={handleFilterClick}>
-          <Text className='filter-text'>
-            {priceRange || starLevel || '筛选条件：价格/星级'}
-          </Text>
-        </View>
 
         {/* 快捷标签 */}
         <View className='quick-tags'>
