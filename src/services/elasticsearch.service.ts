@@ -1,21 +1,50 @@
-import { esClient, HOTEL_INDEX } from '../config/elasticsearch.config';
+import { esClient, HOTEL_INDEX, ES_ENABLED, ES_NODE } from '../config/elasticsearch.config';
 import { Hotel } from '../entities/Hotel';
 
 export class ElasticsearchService {
   async createIndex(): Promise<void> {
+    if (!esClient) {
+      return;
+    }
+
     try {
-      const exists = await esClient.indices.exists({ index: HOTEL_INDEX });
+      const existsResult: any = await esClient.indices.exists({ index: HOTEL_INDEX });
+      const exists = typeof existsResult === 'boolean'
+        ? existsResult
+        : (typeof existsResult?.body === 'boolean' ? existsResult.body : false);
+
       if (!exists) {
         await esClient.indices.create({
           index: HOTEL_INDEX
         } as any);
       }
     } catch (error) {
-      console.error('创建ElasticSearch索引失败:', error);
+      throw error;
+    }
+  }
+
+  async initializeIndex(): Promise<boolean> {
+    if (!ES_ENABLED || !esClient) {
+      console.warn('ElasticSearch已禁用（ES_ENABLED=false），跳过索引初始化');
+      return false;
+    }
+
+    try {
+      await esClient.ping();
+      await this.createIndex();
+      return true;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.warn(`ElasticSearch不可用(${ES_NODE})，已跳过索引初始化：${errorMessage}`);
+      return false;
     }
   }
 
   async indexHotel(hotel: Hotel): Promise<void> {
+    if (!esClient) {
+      return;
+    }
+
     try {
       const { roomTypes, user, ...hotelData } = hotel;
       await esClient.index({
@@ -32,6 +61,10 @@ export class ElasticsearchService {
   }
 
   async updateHotel(hotel: Hotel): Promise<void> {
+    if (!esClient) {
+      return;
+    }
+
     try {
       const { roomTypes, user, ...hotelData } = hotel;
       await esClient.update({
@@ -50,6 +83,10 @@ export class ElasticsearchService {
   }
 
   async deleteHotel(id: number): Promise<void> {
+    if (!esClient) {
+      return;
+    }
+
     try {
       await esClient.delete({
         index: HOTEL_INDEX,
@@ -61,6 +98,10 @@ export class ElasticsearchService {
   }
 
   async searchHotels(query: string, page: number = 1, pageSize: number = 10): Promise<any> {
+    if (!esClient) {
+      return { total: 0, hotels: [] };
+    }
+
     try {
       const result = await esClient.search({
         index: HOTEL_INDEX,

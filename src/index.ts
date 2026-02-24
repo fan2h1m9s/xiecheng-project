@@ -10,6 +10,7 @@ import { UserType } from './enums/user-type.enum';
 import { AuthenticatedRequest } from './middleware/auth.middleware';
 import { initializeRedis } from './config/redis.config';
 import { ElasticsearchService } from './services/elasticsearch.service';
+import { ES_ENABLED } from './config/elasticsearch.config';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -52,8 +53,14 @@ const startServer = async () => {
     
     // 初始化ElasticSearch索引
     const elasticsearchService = new ElasticsearchService();
-    await elasticsearchService.createIndex();
-    console.log('ElasticSearch索引初始化成功');
+    const esReady = await elasticsearchService.initializeIndex();
+    if (!ES_ENABLED) {
+      console.log('ElasticSearch已关闭（ES_ENABLED=false）');
+    } else if (esReady) {
+      console.log('ElasticSearch索引初始化成功');
+    } else {
+      console.warn('ElasticSearch未连接，搜索能力已降级（服务器继续运行）');
+    }
     
     app.listen(PORT, () => {
       console.log(`服务器运行在 http://localhost:${PORT}`);
