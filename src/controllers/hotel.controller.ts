@@ -16,7 +16,11 @@ export class HotelController {
       const hotels = await this.hotelService.findAll();
       res.json(hotels);
     } catch (error) {
-      res.status(500).json({ error: '获取酒店列表失败' });
+      console.error('[HotelController][getAllHotels] error:', error);
+      const detail = process.env.NODE_ENV !== 'production' && error instanceof Error
+        ? error.message
+        : undefined;
+      res.status(500).json({ error: '获取酒店列表失败', detail });
     }
   };
 

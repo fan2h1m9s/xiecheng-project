@@ -16,6 +16,12 @@ export class Hotel {
   @Column({ name: 'hotel_address', length: 500, nullable: true })
   hotelAddress!: string;
 
+  @Column({ name: 'latitude', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  latitude?: number | string;
+
+  @Column({ name: 'longitude', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  longitude?: number | string;
+
   @Column({ name: 'hotel_stars', type: 'tinyint', nullable: true })
   hotelStars!: number;
 
@@ -39,7 +45,6 @@ export class Hotel {
 
   @Column({ name: 'hotel_remarks', type: 'text', nullable: true })
   hotelRemark!: string;
-
   @Column({ name: 'user_id', nullable: true })
   userId!: number;
 

@@ -7,14 +7,17 @@ import { Room } from '../entities/Room';
 import { Order } from '../entities/Order';
 import { OrderRoomRelation } from '../entities/OrderRoomRelation';
 import { Keyword } from '../entities/Keyword';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 export const typeOrmConfig: DataSourceOptions = {
   type: 'mysql',
-  host: 'localhost',
-  port: 3306,
-  username: 'root',
-  password: '123456',
-  database: 'hotel',
+  host: process.env.DB_HOST || 'localhost',
+  port: parseInt(process.env.DB_PORT || '3306', 10),
+  username: process.env.DB_USERNAME || 'root',
+  password: process.env.DB_PASSWORD || '123456',
+  database: process.env.DB_DATABASE || 'hotel',
   entities: [
     Address,
     User,
@@ -25,8 +28,8 @@ export const typeOrmConfig: DataSourceOptions = {
     OrderRoomRelation,
     Keyword
   ],
-  synchronize: false,
-  logging: true,
+  synchronize: process.env.DB_SYNCHRONIZE === 'true' || false,
+  logging: process.env.DB_LOGGING === 'true' || true,
 };
 
 export const AppDataSource = new DataSource(typeOrmConfig);

@@ -8,6 +8,7 @@ export class HotelService {
   private hotelRepository: Repository<Hotel>;
   private keywordRepository: Repository<Keyword>;
   private elasticsearchService: ElasticsearchService;
+  private hasGeoColumnsCache: boolean | null = null;
 
   constructor() {
     this.hotelRepository = AppDataSource.getRepository(Hotel);
@@ -15,8 +16,48 @@ export class HotelService {
     this.elasticsearchService = new ElasticsearchService();
   }
 
+  private async hasGeoColumns(): Promise<boolean> {
+    if (this.hasGeoColumnsCache !== null) {
+      return this.hasGeoColumnsCache;
+    }
+
+    try {
+      const rows = await AppDataSource.query(
+        "SHOW COLUMNS FROM hotel WHERE Field IN ('latitude', 'longitude')"
+      );
+      this.hasGeoColumnsCache = Array.isArray(rows) && rows.length === 2;
+    } catch (error) {
+      this.hasGeoColumnsCache = false;
+    }
+
+    return this.hasGeoColumnsCache;
+  }
+
   async findAll(): Promise<Hotel[]> {
-    return this.hotelRepository.find();
+    const hasGeoColumns = await this.hasGeoColumns();
+    const select: any = {
+      id: true,
+      hotelNameZh: true,
+      hotelNameEn: true,
+      hotelAddress: true,
+      hotelStars: true,
+      hotelTele: true,
+      hotelDis: true,
+      hotelOpeningTime: true,
+      earliestCheckIn: true,
+      latestCheckOut: true,
+      hotelStatus: true,
+      userId: true
+    };
+
+    if (hasGeoColumns) {
+      select.latitude = true;
+      select.longitude = true;
+    }
+
+    return this.hotelRepository.find({
+      select
+    });
   }
 
   async findOne(id: number): Promise<Hotel | null> {
