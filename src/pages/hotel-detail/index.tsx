@@ -1,4 +1,4 @@
-import { View, Image, Text, Button } from '@tarojs/components'
+import { View, Image, Text, Button, Swiper, SwiperItem } from '@tarojs/components'
 import React, { useEffect, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
@@ -51,6 +51,17 @@ export default function HotelDetail() {
   const [detail, setDetail] = useState<HotelDetailData>(DEFAULT_DETAIL)
   const [roomTypes, setRoomTypes] = useState<RoomTypeApiItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [images, setImages] = useState<string[]>([DEFAULT_DETAIL.cover])
+  const [checkInDate, setCheckInDate] = useState<string>(() => {
+    const d = new Date()
+    return d.toISOString().slice(0, 10)
+  })
+  const [checkOutDate, setCheckOutDate] = useState<string>(() => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    return d.toISOString().slice(0, 10)
+  })
+  const [bookingGuests, setBookingGuests] = useState<string>('1间房，1成人，0儿童')
 
   useEffect(() => {
     const loadDetail = async () => {
@@ -63,6 +74,19 @@ export default function HotelDetail() {
         ])
         setDetail(normalizeHotelDetail(hotelData))
         setRoomTypes(allRoomTypes.filter(rt => rt.hotelId === hotelId))
+        // 尝试从接口数据中解析图片数组（兼容多种字段名和格式）
+        const rawImgs = (hotelData as any).images || (hotelData as any).photos || (hotelData as any).hotelImages || (hotelData as any).hotelPhotos || []
+        let imgsArray: string[] = []
+        if (Array.isArray(rawImgs)) {
+          imgsArray = rawImgs.map((it: any) => typeof it === 'string' ? it : (it && (it.url || it.src || it.path) ? (it.url || it.src || it.path) : '')).filter(Boolean)
+        } else if (typeof rawImgs === 'string' && rawImgs) {
+          imgsArray = [rawImgs]
+        }
+        if (imgsArray.length === 0 && (hotelData as any).hotelImage) {
+          const single = (hotelData as any).hotelImage
+          if (typeof single === 'string') imgsArray = [single]
+        }
+        setImages(imgsArray.length > 0 ? imgsArray : [DEFAULT_DETAIL.cover])
       } catch (error) {
         Taro.showToast({ title: '详情加载失败', icon: 'none' })
       } finally {
@@ -88,7 +112,20 @@ export default function HotelDetail() {
 
   return (
     <View className="hotel-detail-page">
-      <Image className="detail-hero" src={detail.cover} mode="aspectFill" />
+      <View className="detail-hero-wrap">
+        <View className="detail-image-container">
+          <View className="detail-image-inner">
+            <Swiper className="detail-swiper" indicatorDots autoplay circular>
+              {images.map((src, idx) => (
+                <SwiperItem key={idx}>
+                  <Image className="detail-hero" src={src} mode="aspectFill" />
+                </SwiperItem>
+              ))}
+            </Swiper>
+          </View>
+        </View>
+        {/* 图片顶部不再显示返回按钮，保留页面其它返回实现 */}
+      </View>
       <View className="detail-body">
         <View className="detail-title-row">
           <View className="detail-title">{detail.name}</View>
@@ -105,6 +142,24 @@ export default function HotelDetail() {
               {tag}
             </Text>
           ))}
+        </View>
+
+        <View className="date-guest-banner" onClick={() => {
+          const url = `/pages/date-select/index?checkIn=${encodeURIComponent(checkInDate)}&checkOut=${encodeURIComponent(checkOutDate)}`
+          Taro.navigateTo({ url, events: {
+            dateSelected: (data: any) => {
+              if (data && data.checkIn) setCheckInDate(data.checkIn)
+              if (data && data.checkOut) setCheckOutDate(data.checkOut)
+            }
+          } })
+        }}>
+          <View className="date-block">
+            <Text className="date-line">{checkInDate} — {checkOutDate}</Text>
+            <Text className="nights">共{Math.max(1, Math.round((new Date(checkOutDate).getTime() - new Date(checkInDate).getTime())/(24*60*60*1000)))}晚</Text>
+          </View>
+          <View className="guest-block">
+            <Text className="guest-text">{bookingGuests}</Text>
+          </View>
         </View>
 
         <View className="detail-section">

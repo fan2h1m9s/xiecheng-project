@@ -49,24 +49,7 @@
     padding-bottom: 14rpx;
     font-weight: 500;
 
-    &.active {
-      color: #fd7a33;
-      font-weight: 600;
-
-      &::after {
-        content: '';
-        position: absolute;
-        bottom: 0;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 36rpx;
-        height: 4rpx;
-        border-radius: 999rpx;
-        background: #fd7a33;
-      }
-    }
-  }
-}
+    /* .tabs 相关样式已移除，整体更简洁 */
 
 .location-search {
   display: flex;

@@ -73,8 +73,10 @@
   padding-right: 58rpx;
 }
 
+
 .domestic-scroll {
   height: calc(100vh - 180rpx);
+  /* 不要设置 padding，避免 webview 报错 */
 }
 
 .domestic-list-wrap {
