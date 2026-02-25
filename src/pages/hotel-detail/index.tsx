@@ -1,5 +1,5 @@
 import { View, Image, Text, Button, Swiper, SwiperItem } from '@tarojs/components'
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
 import { getHotelById, getAllRoomTypes, type HotelApiItem, type RoomTypeApiItem } from '../../services/hotel'
@@ -86,7 +86,13 @@ export default function HotelDetail() {
           const single = (hotelData as any).hotelImage
           if (typeof single === 'string') imgsArray = [single]
         }
-        setImages(imgsArray.length > 0 ? imgsArray : [DEFAULT_DETAIL.cover])
+        // 如果只有一张图片，则复制多份以保证 Swiper 可左右滑动、循环展示
+        const finalImgs = imgsArray.length > 0 ? imgsArray : [((hotelData as any).hotelImage || DEFAULT_DETAIL.cover) as string]
+        if (finalImgs.length === 1) {
+          setImages([finalImgs[0], finalImgs[0], finalImgs[0]])
+        } else {
+          setImages(finalImgs)
+        }
       } catch (error) {
         Taro.showToast({ title: '详情加载失败', icon: 'none' })
       } finally {
@@ -109,6 +115,14 @@ export default function HotelDetail() {
     }
     Taro.makePhoneCall({ phoneNumber: detail.phone })
   }
+
+  const sortedRoomTypes = useMemo(() => {
+    return [...roomTypes].sort((a, b) => {
+      const pa = Number(a.roomTypePrice || 0)
+      const pb = Number(b.roomTypePrice || 0)
+      return pa - pb
+    })
+  }, [roomTypes])
 
   return (
     <View className="hotel-detail-page">
@@ -179,7 +193,7 @@ export default function HotelDetail() {
           <View className="detail-section-title">房型列表</View>
           {loading && <View className="room-loading">房型加载中...</View>}
           {!loading && roomTypes.length === 0 && <View className="room-empty">暂无房型信息</View>}
-          {roomTypes.map(rt => {
+          {sortedRoomTypes.map(rt => {
             const price = Number(rt.roomTypePrice || 0)
             const restCount = Number(rt.roomTypeRest || 0)
             return (
