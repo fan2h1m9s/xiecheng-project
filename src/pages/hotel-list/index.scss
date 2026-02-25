@@ -3,26 +3,28 @@
   height: 100vh;                    // 页面占满整个视口高度
   display: flex;                    // 使用弹性布局
   flex-direction: column;           // 垂直排列子元素
-  background-color: #f7f7f7;        // 页面背景色
+  background: linear-gradient(135deg, #f9f9f9 0%, #f0f4f8 100%);        // 页面背景色
 }
 
 // ==================== 页面头部区域样式 ====================
 .hotel-list-header {
   position: sticky;                 // 固定定位
   top: 0;                          // 距离顶部0像素
-  background: #f2f2f2;             // 与筛选页一致的背景
+  background: rgba(255, 255, 255, 0.95);             // 与筛选页一致的背景
+  backdrop-filter: blur(10rpx);
   z-index: 10;                     // 层级较高，避免被遮挡
   padding: 0;                      // 取消内边距
-  box-shadow: none;                // 取消阴影
+  box-shadow: 0 4rpx 16rpx rgba(0, 0, 0, 0.06);                // 取消阴影
   display: flex;                   // 弹性布局
   flex-direction: column;          // 垂直排列子元素
+  transition: all 0.3s ease;
 }
 
 .searchRow {
   display: flex;
   flex-direction: row;
-  gap: 8rpx;
-  margin: 16rpx 22rpx 0;
+  gap: 12rpx;
+  margin: 20rpx 24rpx 0;
   align-items: center;
 }
 
@@ -30,25 +32,41 @@
   flex: 1;
   display: flex;
   flex-direction: row;
-  gap: 8rpx;
+  gap: 12rpx;
 }
 
 .infoCard {
   flex: 0.7;
   background: #ffffff;
   border-radius: 36rpx;
-  border: 1rpx solid #e6e6e6;
-  padding: 8rpx 28rpx;
+  border: 2rpx solid #f0f0f0;
+  padding: 12rpx 28rpx;
   box-sizing: border-box;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    border-color: #fdc3a5;
+    box-shadow: 0 4rpx 12rpx rgba(253, 122, 51, 0.1);
+  }
 }
 
 .searchCard {
   flex: 1.7;
   background: #ffffff;
   border-radius: 36rpx;
-  border: 1rpx solid #e6e6e6;
-  padding: 8rpx 14rpx;
+  border: 2rpx solid #f0f0f0;
+  padding: 12rpx 18rpx;
   box-sizing: border-box;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+
+  &:active {
+    transform: scale(0.98);
+    border-color: #fdc3a5;
+    box-shadow: 0 4rpx 12rpx rgba(253, 122, 51, 0.1);
+  }
 }
 
 .infoCard {
