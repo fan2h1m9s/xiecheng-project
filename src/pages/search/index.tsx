@@ -1,20 +1,16 @@
 import { View, Text, Input, ScrollView } from '@tarojs/components'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
 
-type SearchTabKey = 'domestic' | 'overseas' | 'hot'
+import { getHotels, HotelApiItem } from '../../services/hotel'
 
-const TAB_OPTIONS: { key: SearchTabKey; label: string }[] = [
-  { key: 'domestic', label: '国内' },
-  { key: 'overseas', label: '海外' },
-  { key: 'hot', label: 'xx热搜' }
-]
+type SearchTabKey = 'domestic'
 
-const SEARCH_DATA: Record<SearchTabKey, string[]> = {
-  domestic: ['北京 国贸', '上海 陆家嘴', '广州 珠江新城', '深圳 南山科技园', '杭州 西湖', '成都 春熙路'],
-  overseas: ['东京 新宿', '大阪 心斋桥', '首尔 明洞', '新加坡 乌节路', '曼谷 暹罗', '巴黎 歌剧院'],
-  hot: ['迪士尼度假区', '机场周边', '地铁沿线', '亲子酒店', '温泉酒店', '海景酒店']
+// 只保留国内，无tab
+
+const SEARCH_DATA = {
+  domestic: ['北京 国贸', '上海 陆家嘴', '广州 珠江新城', '深圳 南山科技园', '杭州 西湖', '成都 春熙路']
 }
 
 const DOMESTIC_CITY_GROUPS = [
@@ -35,6 +31,16 @@ const DOMESTIC_CITY_GROUPS = [
   { initial: 'Z', cities: ['郑州', '珠海'] }
 ]
 
+const OVERSEAS_CITY_GROUPS = [
+  { initial: 'D', cities: ['东京', '大阪', '迪拜'] },
+  { initial: 'M', cities: ['曼谷', '马尼拉', '马尔代夫'] },
+  { initial: 'N', cities: ['纽约', '尼斯'] },
+  { initial: 'P', cities: ['巴黎', '普吉岛'] },
+  { initial: 'S', cities: ['首尔', '新加坡', '悉尼'] },
+  { initial: 'L', cities: ['伦敦', '洛杉矶'] },
+  { initial: 'B', cities: ['巴厘岛', '巴塞罗那'] },
+]
+
 const safeDecode = (value?: string) => {
   if (!value) return ''
   try {
@@ -52,18 +58,43 @@ export default function SearchPage() {
   const tabParam = safeDecode(params.tab)
   const scene = safeDecode(params.scene)
 
-  const initialTab: SearchTabKey = tabParam === 'overseas' ? 'overseas' : 'domestic'
   const isCityScene = scene === 'city'
 
   const [keyword, setKeyword] = useState(defaultKeyword)
-  const [activeTab, setActiveTab] = useState<SearchTabKey>(initialTab)
   const [scrollIntoId, setScrollIntoId] = useState('city-group-B')
+  // 新增：酒店搜索结果
+  const [hotelResults, setHotelResults] = useState<HotelApiItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  // 监听关键词变化，进行数据库搜索
+  useEffect(() => {
+    if (!keyword.trim()) {
+      setHotelResults([])
+      setError('')
+      return
+    }
+    setLoading(true)
+    setError('')
+    getHotels()
+      .then(list => {
+        // 简单过滤，实际可后端支持关键词搜索
+        const filtered = list.filter(hotel =>
+          (hotel.hotelNameZh && hotel.hotelNameZh.includes(keyword)) ||
+          (hotel.hotelNameEn && hotel.hotelNameEn.toLowerCase().includes(keyword.toLowerCase())) ||
+          (hotel.hotelAddress && hotel.hotelAddress.includes(keyword))
+        )
+        setHotelResults(filtered)
+      })
+      .catch(e => setError(e.message || '搜索失败'))
+      .finally(() => setLoading(false))
+  }, [keyword])
 
   const currentList = useMemo(() => {
-    const source = SEARCH_DATA[activeTab]
+    const source = SEARCH_DATA.domestic
     if (!keyword.trim()) return source
     return source.filter(item => item.toLowerCase().includes(keyword.trim().toLowerCase()))
-  }, [activeTab, keyword])
+  }, [keyword])
 
   const domesticGroups = useMemo(() => {
     const normalized = keyword.trim()
@@ -83,6 +114,17 @@ export default function SearchPage() {
       channel.emit('keywordSelected', { keyword: value, isCity: isCityScene ? true : isCity })
     }
     Taro.navigateBack()
+  }
+
+  // 点击酒店条目，跳转到该酒店详情页
+  const handleOpenHotel = (hotel: HotelApiItem) => {
+    if (!hotel) return
+    if (hotel.id !== undefined && hotel.id !== null) {
+      Taro.navigateTo({ url: `/pages/hotel-detail/index?id=${hotel.id}` })
+      return
+    }
+    // 回退到选择关键字逻辑（兼容没有 id 的情况）
+    handleSelectKeyword(hotel.hotelNameZh || hotel.hotelNameEn || '', false)
   }
 
   const handleConfirm = () => {
@@ -105,81 +147,66 @@ export default function SearchPage() {
           <Input
             className='search-input'
             value={keyword}
-            placeholder='全球城市/区域/位置/酒店'
+            placeholder='城市/区域/位置/酒店'
             confirmType='search'
             focus
             onInput={e => setKeyword(e.detail.value)}
             onConfirm={handleConfirm}
           />
         </View>
-        <View className='search-tabs'>
-          {TAB_OPTIONS.map(tab => (
-            <View
-              key={tab.key}
-              className={`search-tab ${activeTab === tab.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(tab.key)}
-            >
-              <Text>{tab.label}</Text>
-            </View>
-          ))}
-        </View>
+        {/* 无tab，仅国内城市选择 */}
       </View>
 
-      {activeTab === 'domestic' ? (
-        <View className='domestic-content'>
-          <ScrollView
-            className='domestic-scroll'
-            scrollY
-            scrollIntoView={scrollIntoId}
-          >
-            <View className='domestic-list-wrap'>
-              <Text className='section-title'>
-                {keyword ? '城市搜索结果' : '选择国内城市'}
-              </Text>
-              {domesticGroups.length > 0 ? (
-                domesticGroups.map(group => (
-                  <View key={group.initial} id={`city-group-${group.initial}`} className='city-group'>
-                    <View className='city-group-title'>
-                      <Text>{group.initial}</Text>
-                    </View>
-                    <View className='city-group-list'>
-                      {group.cities.map(city => (
-                        <View key={city} className='city-item' onClick={() => handleSelectKeyword(city, true)}>
-                          <Text>{city}</Text>
-                        </View>
-                      ))}
-                    </View>
+      {/* 只要有关键词，优先展示搜索结果，覆盖内容区 */}
+      {keyword.trim() ? (
+        <View className='search-content'>
+          <Text className='section-title'>搜索结果</Text>
+          <View className='result-list'>
+            {loading ? (
+              <View className='empty-text'>搜索中...</View>
+            ) : error ? (
+              <View className='empty-text'>{error}</View>
+            ) : hotelResults.length > 0 ? (
+              hotelResults.map(hotel => (
+                <View key={hotel.id} className='result-item' onClick={() => handleOpenHotel(hotel)}>
+                  <Text>{hotel.hotelNameZh || hotel.hotelNameEn}</Text>
+                  {hotel.hotelAddress && <Text className='hotel-address'>{hotel.hotelAddress}</Text>}
+                </View>
+              ))
+            ) : (
+              <View className='empty-text'>未找到相关酒店</View>
+            )}
+          </View>
+        </View>
+      ) : (
+        <View className='search-content'>
+          <Text className='section-title'>选择国内城市</Text>
+          <View className='result-list'>
+            {domesticGroups.length > 0 ? (
+              domesticGroups.map(group => (
+                <View key={group.initial} id={`city-group-${group.initial}`} className='city-group'>
+                  <View className='city-group-title'>
+                    <Text>{group.initial}</Text>
                   </View>
-                ))
-              ) : (
-                <View className='empty-text'>未找到相关城市</View>
-              )}
-            </View>
-          </ScrollView>
-
+                  <View className='city-group-list'>
+                    {group.cities.map(city => (
+                      <View key={city} className='city-item' onClick={() => handleSelectKeyword(city, true)}>
+                        <Text>{city}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              ))
+            ) : (
+              <View className='empty-text'>未找到相关城市</View>
+            )}
+          </View>
           <View className='letter-index'>
             {domesticLetters.map(letter => (
               <View key={letter} className='letter-item' onClick={() => jumpToLetter(letter)}>
                 <Text>{letter}</Text>
               </View>
             ))}
-          </View>
-        </View>
-      ) : (
-        <View className='search-content'>
-          <Text className='section-title'>
-            {keyword ? '搜索结果' : `${defaultCity || '当前城市'}热门推荐`}
-          </Text>
-          <View className='result-list'>
-            {currentList.length > 0 ? (
-              currentList.map(item => (
-                <View key={item} className='result-item' onClick={() => handleSelectKeyword(item, false)}>
-                  <Text>{item}</Text>
-                </View>
-              ))
-            ) : (
-              <View className='empty-text'>未找到相关结果</View>
-            )}
           </View>
         </View>
       )}

@@ -22,13 +22,15 @@ const QUICK_TAGS = ['亲子', '豪华', '免费停车场', '含早餐', '近地�
 export default function Index() {
   const hasAutoLocatedRef = useRef(false)
   const [currentCity, setCurrentCity] = useState('定位中')
+  const [currentLat, setCurrentLat] = useState<number | null>(null)
+  const [currentLng, setCurrentLng] = useState<number | null>(null)
   const [keyword, setKeyword] = useState('')
   const [checkInDate, setCheckInDate] = useState('')
   const [checkOutDate, setCheckOutDate] = useState('')
   const [checkInDateStr, setCheckInDateStr] = useState('')
   const [checkOutDateStr, setCheckOutDateStr] = useState('')
   const [nightCount, setNightCount] = useState(1)
-  const [selectedTab, setSelectedTab] = useState('国内')
+  // 删除tab，仅保留国内
   const [selectedTags, setSelectedTags] = useState<string[]>([])
   const [locationSuffix, setLocationSuffix] = useState('')
   const [locationAddress, setLocationAddress] = useState('正在获取定位地址...')
@@ -111,6 +113,23 @@ export default function Index() {
         const first = Array.isArray(res) ? res[0] : res
         const regeoData = first && first.regeocodeData ? first.regeocodeData : {}
         const addressComponent = (first && first.addressComponent) || (regeoData && regeoData.addressComponent) || {}
+        // 尝试解析经纬度，常见情况：regeoData.location = "lng,lat" 或 first.location
+        try {
+          const locStr = (first && (first.location || first.lonlat)) || (regeoData && regeoData.location) || ''
+          if (locStr && typeof locStr === 'string') {
+            const parts = locStr.split(',')
+            if (parts.length === 2) {
+              const lng = parseFloat(parts[0])
+              const lat = parseFloat(parts[1])
+              if (!Number.isNaN(lat) && !Number.isNaN(lng)) {
+                setCurrentLat(lat)
+                setCurrentLng(lng)
+              }
+            }
+          }
+        } catch (e) {
+          // ignore
+        }
         const city = normalizeCityName(addressComponent.city, addressComponent.province)
         const district = addressComponent.district || ''
         const township = addressComponent.township || ''
@@ -139,8 +158,7 @@ export default function Index() {
 
   // 选择城市
   const handleCitySelect = () => {
-    const initialTab = selectedTab === '海外' ? 'overseas' : 'domestic'
-    const url = `/pages/search/index?city=${encodeURIComponent(currentCity)}&tab=${initialTab}&scene=city`
+    const url = `/pages/search/index?city=${encodeURIComponent(currentCity)}&scene=city`
     Taro.navigateTo({
       url,
       events: {
@@ -158,8 +176,7 @@ export default function Index() {
 
   // 打开搜索页
   const openSearchPage = () => {
-    const initialTab = selectedTab === '海外' ? 'overseas' : 'domestic'
-    const url = `/pages/search/index?keyword=${encodeURIComponent(keyword)}&city=${encodeURIComponent(currentCity)}&tab=${initialTab}&scene=keyword`
+    const url = `/pages/search/index?keyword=${encodeURIComponent(keyword)}&city=${encodeURIComponent(currentCity)}&scene=keyword`
     Taro.navigateTo({
       url,
       events: {
@@ -207,11 +224,10 @@ export default function Index() {
 
   // 切换标签
   const toggleTag = (tag: string) => {
-    if (selectedTags.includes(tag)) {
-      setSelectedTags(selectedTags.filter(t => t !== tag))
-    } else {
-      setSelectedTags([...selectedTags, tag])
-    }
+    const newTags = selectedTags.includes(tag) ? selectedTags.filter(t => t !== tag) : [...selectedTags, tag]
+    setSelectedTags(newTags)
+    // 点击标签后立即带上该标签进行查询并优先展示含该标签的酒店，优先排序可由后端根据 priorityTag 和位置处理
+    navigateToList({ priorityTag: tag, tags: newTags })
   }
 
   // 查询按钮
@@ -266,14 +282,22 @@ export default function Index() {
   }
 
   // 跳转到列表页
-  const navigateToList = () => {
-    const params = {
+  const navigateToList = (options?: { priorityTag?: string; tags?: string[] }) => {
+    const tagsArr = options && options.tags ? options.tags : selectedTags
+    const params: Record<string, any> = {
       city: currentCity,
       keyword: keyword,
       checkIn: checkInDate,
       checkOut: checkOutDate,
       nights: nightCount,
-      tags: selectedTags.join(',')
+      tags: tagsArr.join(',')
+    }
+    if (options && options.priorityTag) {
+      params.priorityTag = options.priorityTag
+    }
+    if (currentLat && currentLng) {
+      params.lat = currentLat
+      params.lng = currentLng
     }
     
     const queryString = Object.entries(params)
@@ -321,18 +345,7 @@ export default function Index() {
 
       {/* 核心查询区域 */}
       <View className='search-container'>
-        {/* Tab 切换 */}
-        <View className='tabs'>
-          {['国内', '海外'].map(tab => (
-            <View 
-              key={tab}
-              className={`tab-item ${selectedTab === tab ? 'active' : ''}`}
-              onClick={() => setSelectedTab(tab)}
-            >
-              <Text>{tab}</Text>
-            </View>
-          ))}
-        </View>
+        {/* Tab 切换已移除，仅保留国内 */}
 
         {/* 城市选择 + 关键字搜索 */}
         <View className='location-detail-window'>

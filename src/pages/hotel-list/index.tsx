@@ -1,4 +1,4 @@
-import { View, Text, Image } from '@tarojs/components'
+import { View, Text, Image, Input } from '@tarojs/components'
 import { useEffect, useMemo, useState } from 'react'
 import Taro from '@tarojs/taro'
 import './index.scss'
@@ -49,6 +49,7 @@ const normalizeHotel = (hotel: HotelApiItem): HotelListItem => {
 export default function HotelList() {
   const [showInfoPanel, setShowInfoPanel] = useState(false)
   const [showGuestPanel, setShowGuestPanel] = useState(false)
+  const [showFilterPanel, setShowFilterPanel] = useState(false)
   const [activeFilter, setActiveFilter] = useState('distance')
   const [currentLocation, setCurrentLocation] = useState('定位中')
   const [bookingCity, setBookingCity] = useState('深圳')
@@ -60,6 +61,30 @@ export default function HotelList() {
   const [loading, setLoading] = useState(false)
   const [searchKeyword, setSearchKeyword] = useState('')
   const [locationSuffix, setLocationSuffix] = useState('')
+  // 详细筛选状态
+  const FILTER_TAGS = ['含早餐', '近地铁', '亲子', '商务出行', '高评分']
+  const [filterTags, setFilterTags] = useState<string[]>([])
+  const [priceMin, setPriceMin] = useState<number | ''>('')
+  const [priceMax, setPriceMax] = useState<number | ''>('')
+  // 更多筛选选项
+  const DISTANCE_OPTIONS = [
+    { label: '<2km', value: 2 },
+    { label: '<5km', value: 5 },
+    { label: '<10km', value: 10 },
+    // 已移除小于50km选项，保留较常用的近距离筛选
+  ]
+  const ACCOMMODATION_TYPES = ['酒店', '民宿', '公寓', '青年旅舍']
+  const HOTEL_FEATURES = ['含早餐', '近地铁', '温泉', '无烟房', '亲子']
+  const HOT_FILTERS = ['高评分', '限时优惠', '自助早餐']
+  const ROOM_FEATURES = ['大床', '双床', '可加床', '带浴缸']
+  const BRANDS = ['希尔顿', '万豪', '如家', '锦江']
+
+  const [selectedDistance, setSelectedDistance] = useState<number | null>(null)
+  const [selectedAccommodations, setSelectedAccommodations] = useState<string[]>([])
+  const [selectedHotelFeatures, setSelectedHotelFeatures] = useState<string[]>([])
+  const [selectedHotFilters, setSelectedHotFilters] = useState<string[]>([])
+  const [selectedRoomFeatures, setSelectedRoomFeatures] = useState<string[]>([])
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([])
 
   const AMAP_KEY = 'f797b890e4324fcb4f7d7e2dab927978'
 
@@ -283,8 +308,53 @@ export default function HotelList() {
     })
   }
 
+  const filteredHotels = useMemo(() => {
+    return hotels.filter(h => {
+      // tag filter
+      if (filterTags.length > 0) {
+        const hasTag = filterTags.some(t => (h.tags || []).includes(t))
+        if (!hasTag) return false
+      }
+      // price filter
+      if (priceMin !== '' && h.price < Number(priceMin)) return false
+      if (priceMax !== '' && h.price > Number(priceMax)) return false
+      // keyword filter
+      if (searchKeyword && !h.name.includes(searchKeyword) && !h.location.includes(searchKeyword)) return false
+      // distance filter
+      if (selectedDistance !== null && typeof h.distanceKm === 'number') {
+        if (h.distanceKm > selectedDistance) return false
+      }
+      // accommodation types (OR within group)
+      if (selectedAccommodations.length > 0) {
+        const ok = selectedAccommodations.some(t => (h.tags || []).includes(t))
+        if (!ok) return false
+      }
+      // hotel features
+      if (selectedHotelFeatures.length > 0) {
+        const ok = selectedHotelFeatures.some(t => (h.tags || []).includes(t))
+        if (!ok) return false
+      }
+      // hot filters
+      if (selectedHotFilters.length > 0) {
+        const ok = selectedHotFilters.some(t => (h.tags || []).includes(t))
+        if (!ok) return false
+      }
+      // room features
+      if (selectedRoomFeatures.length > 0) {
+        const ok = selectedRoomFeatures.some(t => (h.tags || []).includes(t))
+        if (!ok) return false
+      }
+      // brands
+      if (selectedBrands.length > 0) {
+        const ok = selectedBrands.some(t => (h.tags || []).includes(t))
+        if (!ok) return false
+      }
+      return true
+    })
+  }, [hotels, filterTags, priceMin, priceMax, searchKeyword])
+
   const sortedHotels = useMemo(() => {
-    const sorted = [...hotels]
+    const sorted = [...filteredHotels]
     sorted.sort((a, b) => {
       if (activeFilter === 'price') return a.price - b.price
       if (activeFilter === 'distance') return a.distanceKm - b.distanceKm
@@ -292,7 +362,7 @@ export default function HotelList() {
       return 0
     })
     return sorted
-  }, [activeFilter, hotels])
+  }, [activeFilter, filteredHotels])
 
   return (
     <View className="hotel-list-page">
@@ -361,6 +431,108 @@ export default function HotelList() {
                     <Text className="guest-item">{guestNumbers.children}儿童</Text>
                   </View>
                 </View>
+              </View>
+            </View>
+          </View>
+        )}
+        {/* 详细筛选面板 */}
+        {showFilterPanel && (
+          <View className="filter-overlay">
+            <View className="filter-panel">
+              <View className="filter-header">
+                <Text className="filter-title">详细筛选</Text>
+                <Text className="filter-close" onClick={() => setShowFilterPanel(false)}>关闭</Text>
+              </View>
+              <View className="filter-body">
+                <View className="filter-section">
+                  <Text className="section-label">价格区间(元)</Text>
+                  <View className="price-row">
+                    <Input className="price-input" type="number" value={priceMin === '' ? '' : String(priceMin)} onInput={e => setPriceMin(e.detail.value ? Number(e.detail.value) : '')} />
+                    <Text className="price-sep">-</Text>
+                    <Input className="price-input" type="number" value={priceMax === '' ? '' : String(priceMax)} onInput={e => setPriceMax(e.detail.value ? Number(e.detail.value) : '')} />
+                  </View>
+                </View>
+                <View className="filter-section">
+                  <Text className="section-label">标签</Text>
+                  <View className="tag-options">
+                    {FILTER_TAGS.map(tag => (
+                      <View key={tag} className={`tag-opt ${filterTags.includes(tag) ? 'active' : ''}`} onClick={() => {
+                        setFilterTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
+                      }}>
+                        <Text>{tag}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+                <View className="filter-section">
+                  <Text className="section-label">距离</Text>
+                  <View className="tag-options">
+                    {DISTANCE_OPTIONS.map(opt => (
+                      <View key={opt.label} className={`tag-opt ${selectedDistance === opt.value ? 'active' : ''}`} onClick={() => setSelectedDistance(prev => prev === opt.value ? null : opt.value)}>
+                        <Text>{opt.label}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="filter-section">
+                  <Text className="section-label">住宿类型</Text>
+                  <View className="tag-options">
+                    {ACCOMMODATION_TYPES.map(t => (
+                      <View key={t} className={`tag-opt ${selectedAccommodations.includes(t) ? 'active' : ''}`} onClick={() => setSelectedAccommodations(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>
+                        <Text>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="filter-section">
+                  <Text className="section-label">酒店特色</Text>
+                  <View className="tag-options">
+                    {HOTEL_FEATURES.map(t => (
+                      <View key={t} className={`tag-opt ${selectedHotelFeatures.includes(t) ? 'active' : ''}`} onClick={() => setSelectedHotelFeatures(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>
+                        <Text>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="filter-section">
+                  <Text className="section-label">热门筛选</Text>
+                  <View className="tag-options">
+                    {HOT_FILTERS.map(t => (
+                      <View key={t} className={`tag-opt ${selectedHotFilters.includes(t) ? 'active' : ''}`} onClick={() => setSelectedHotFilters(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>
+                        <Text>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="filter-section">
+                  <Text className="section-label">客房特色</Text>
+                  <View className="tag-options">
+                    {ROOM_FEATURES.map(t => (
+                      <View key={t} className={`tag-opt ${selectedRoomFeatures.includes(t) ? 'active' : ''}`} onClick={() => setSelectedRoomFeatures(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>
+                        <Text>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                <View className="filter-section">
+                  <Text className="section-label">热门品牌</Text>
+                  <View className="tag-options">
+                    {BRANDS.map(t => (
+                      <View key={t} className={`tag-opt ${selectedBrands.includes(t) ? 'active' : ''}`} onClick={() => setSelectedBrands(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t])}>
+                        <Text>{t}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              </View>
+              <View className="filter-footer">
+                <View className="filter-reset" onClick={() => { setFilterTags([]); setPriceMin(''); setPriceMax(''); setSelectedDistance(null); setSelectedAccommodations([]); setSelectedHotelFeatures([]); setSelectedHotFilters([]); setSelectedRoomFeatures([]); setSelectedBrands([]); }}>重置</View>
+                <View className="filter-apply" onClick={() => setShowFilterPanel(false)}>应用筛选</View>
               </View>
             </View>
           </View>
@@ -453,6 +625,9 @@ export default function HotelList() {
               <Text className="sortLabel">{option.label}</Text>
             </View>
           ))}
+          <View className={`sortButton filterButton ${false ? 'active' : ''}`} onClick={() => setShowFilterPanel(true)}>
+            <Text className="sortLabel">筛选</Text>
+          </View>
         </View>
       </View>
 
