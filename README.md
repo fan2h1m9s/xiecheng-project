@@ -33,7 +33,7 @@
 
 ## 注意事项
 
-- **项目需要配合后端 API 使用。请确保后端服务已启动。**
+- **项目需要配合后端 API 使用。请确保后端服务已启动。**后端详细源码请在 [GitHub 仓库](https://github.com/Nightin-g/hotel-server) 查看。
 - 后端 API 地址默认为 `http://localhost:3000`，如需修改可在 [`vite.config.ts`](https://github.com/FindNoName/XieCheng-hotel-fullstack-wxapp/blob/main/vite.config.ts) 中设置。
 - 用户认证信息存储在 `localStorage` 中，前端通过 JWT 与后端进行身份认证与权限管理。
 - 请妥善保护 JWT Token 等用户敏感信息，避免泄露。
