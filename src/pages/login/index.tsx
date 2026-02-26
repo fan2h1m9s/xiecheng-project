@@ -181,8 +181,8 @@ export default function LoginPage() {
         data: {
           userAccount: account,
           userPassword: password,
-          userName: account, // 使用账号作为默认用户名
           userType: role === 'hotel' ? 3 : 1 // 1: 普通用户, 3: 酒店管理员
+          // 注册时不设置userName，在修改个人信息时再设置
         }
       })
 
@@ -266,11 +266,11 @@ export default function LoginPage() {
         <View className='form'>
           {/* 账号输入 */}
           <View className='field'>
-            <Text className='label'>用户名 / 手机号</Text>
+            <Text className='label'>用户名</Text>
             <Input
               className={`input ${errors.account ? 'error' : ''}`}
               value={account}
-              placeholder='请输入用户名或手机号'
+              placeholder='请输入用户名'
               onInput={handleAccountChange}
               maxlength={20}
               confirmType='next'
