@@ -13,19 +13,19 @@ export class Order {
   orderStatus!: number;
 
   @Column({ name: 'order_price', type: 'decimal', precision: 10, scale: 2, nullable: true })
-  orderPrice!: number;
+  orderTotalPrice!: number;
 
   @Column({ name: 'order_time', type: 'datetime', nullable: true })
-  orderTime!: Date;
+  orderCreateTime!: Date;
 
   @Column({ name: 'order_user_id', nullable: true })
-  orderUserId!: number;
+  userId!: number;
 
   @Column({ name: 'check_in_time', type: 'datetime', nullable: true })
-  checkInTime!: Date;
+  orderCheckInTime!: Date;
 
   @Column({ name: 'check_out_time', type: 'datetime', nullable: true })
-  checkOutTime!: Date;
+  orderCheckOutTime!: Date;
 
   @ManyToOne(() => User)
   @JoinColumn({ name: 'order_user_id' })

@@ -312,7 +312,7 @@ export class OrderService {
     }
 
     // 检查是否在入住时间之前
-    if (new Date() >= order.checkInTime) {
+    if (new Date() >= order.orderCheckInTime) {
       throw new Error('入住时间已过，无法取消订单');
     }
 
@@ -366,5 +366,9 @@ export class OrderService {
       where: { orderId },
       relations: ['order', 'roomType'],
     });
+  }
+
+  async remove(id: number): Promise<void> {
+    await this.orderRepository.delete(id);
   }
 }

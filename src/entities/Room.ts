@@ -25,6 +25,9 @@ export class Room {
   @Column({ name: 'room_area', type: 'decimal', precision: 8, scale: 2, nullable: true })
   roomArea!: number;
 
+  @Column({ name: 'room_price', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  roomPrice!: number;
+
   @ManyToOne(() => RoomType)
   @JoinColumn({ name: 'room_type_id' })
   roomType!: RoomType;

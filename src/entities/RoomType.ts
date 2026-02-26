@@ -14,7 +14,7 @@ export class RoomType {
   roomTypePrice!: number;
 
   @Column({ name: 'room_type_dis', type: 'text', nullable: true })
-  roomTypeDis!: string;
+  roomTypeDescription!: string;
 
   @Column({ name: 'room_type_rest', nullable: true })
   roomTypeRest!: number;

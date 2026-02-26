@@ -8,7 +8,7 @@ export class Hotel {
   id!: number;
 
   @Column({ name: 'hotel_name_zh', length: 200, nullable: true })
-  hotelNameZh!: string;
+  hotelName!: string;
 
   @Column({ name: 'hotel_name_en', length: 200, nullable: true })
   hotelNameEn!: string;
@@ -26,7 +26,7 @@ export class Hotel {
   hotelStars!: number;
 
   @Column({ name: 'hotel_tele', length: 20, nullable: true })
-  hotelTele!: string;
+  hotelPhone!: string;
 
   @Column({ name: 'hotel_dis', type: 'text', nullable: true })
   hotelDis!: string;
@@ -42,6 +42,9 @@ export class Hotel {
 
   @Column({ name: 'hotel_status', type: 'tinyint', nullable: true })
   hotelStatus!: number;
+
+  @Column({ name: 'hotel_region', type: 'tinyint', nullable: true })
+  hotelRegion!: number;
 
   @Column({ name: 'hotel_remarks', type: 'text', nullable: true })
   hotelRemark!: string;
