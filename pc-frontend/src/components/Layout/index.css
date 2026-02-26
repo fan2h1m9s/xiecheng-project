@@ -1,0 +1,35 @@
+.layout {
+  min-height: 100vh;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+}
+
+.logo {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  white-space: nowrap;
+}
+
+.header .ant-menu {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-btn {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.user-btn:hover {
+  color: white;
+}
+
+.content {
+  padding: 24px;
+  background: #f0f2f5;
+}
