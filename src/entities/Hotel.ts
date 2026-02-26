@@ -8,7 +8,7 @@ export class Hotel {
   id!: number;
 
   @Column({ name: 'hotel_name_zh', length: 200, nullable: true })
-  hotelName!: string;
+  hotelNameZh!: string;
 
   @Column({ name: 'hotel_name_en', length: 200, nullable: true })
   hotelNameEn!: string;
