@@ -1,0 +1,129 @@
+import { defineConfig, type UserConfigExport } from '@tarojs/cli'
+//import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin'
+import devConfig from './dev'
+import prodConfig from './prod'
+
+// https://taro-docs.jd.com/docs/next/config#defineconfig-辅助函数
+// export default defineConfig<'webpack5'>(async (merge, { command, mode }) => {
+  export default defineConfig<'webpack5'>(async (merge) => {
+  const baseConfig: UserConfigExport<'webpack5'> = {
+    projectName: 'hotel-app',
+    date: '2026-2-5',
+    designWidth: 750,
+    deviceRatio: {
+      640: 2.34 / 2,
+      750: 1,
+      375: 2,
+      828: 1.81 / 2
+    },
+    sourceRoot: 'src',
+    outputRoot: 'dist',
+    plugins: [
+      "@tarojs/plugin-generator"
+    ],
+    defineConstants: {
+    },
+    copy: {
+      patterns: [
+      ],
+      options: {
+      }
+    },
+    framework: 'react',
+    compiler: 'webpack5',
+    cache: {
+      enable: false // Webpack 持久化缓存配置，建议开启。默认配置请参考：https://docs.taro.zone/docs/config-detail#cache
+    },
+    mini: {
+  postcss: {
+    pxtransform: {
+      enable: true,
+      config: {}
+    },
+    cssModules: {
+      enable: false,
+      config: {
+        namingPattern: 'module',
+        generateScopedName: '[name]__[local]___[hash:base64:5]'
+      }
+    }
+  },
+  commonChunks: ['runtime', 'vendors', 'taro', 'common'],
+  optimizeMainPackage: {
+    enable: true
+  },
+  webpackChain(chain, webpack) {
+    // 移除可能导致问题的 external 配置
+    chain.externals({})
+    
+    // 确保模块解析正确
+    chain.resolve.mainFields
+      .clear()
+      .add('browser')
+      .add('module')
+      .add('main')
+      
+    // 添加模块解析扩展名
+    chain.resolve.extensions
+      .merge(['.js', '.jsx', '.ts', '.tsx', '.json'])
+  }
+},
+    h5: {
+      publicPath: '/',
+      staticDirectory: 'static',
+      output: {
+        filename: 'js/[name].[hash:8].js',
+        chunkFilename: 'js/[name].[chunkhash:8].js'
+      },
+      miniCssExtractPluginOption: {
+        ignoreOrder: true,
+        filename: 'css/[name].[hash].css',
+        chunkFilename: 'css/[name].[chunkhash].css'
+      },
+      postcss: {
+        autoprefixer: {
+          enable: true,
+          config: {}
+        },
+        cssModules: {
+          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
+          config: {
+            namingPattern: 'module', // 转换模式，取值为 global/module
+            generateScopedName: '[name]__[local]___[hash:base64:5]'
+          }
+        }
+      },
+      webpackChain(chain) {
+        //chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+        // 为需要的 node 内置模块添加 browser-friendly 的 polyfill
+        // 这些包需要在项目中安装：crypto-browserify、stream-browserify、buffer
+        // Provide Buffer 全局变量供某些库使用
+        // 注意：如果未安装这些依赖，请先通过 npm/yarn/pnpm 安装
+        const webpack = require('webpack')
+        chain.resolve.fallback.merge({
+          crypto: require.resolve('crypto-browserify'),
+          stream: require.resolve('stream-browserify'),
+          buffer: require.resolve('buffer/')
+        })
+        chain.plugin('provide').use(webpack.ProvidePlugin, [{ Buffer: ['buffer', 'Buffer'] }])
+      }
+    },
+    rn: {
+      appName: 'taroDemo',
+      postcss: {
+        cssModules: {
+          enable: false, // 默认为 false，如需使用 css modules 功能，则设为 true
+        }
+      }
+    }
+  }
+
+  process.env.BROWSERSLIST_ENV = process.env.NODE_ENV
+
+  if (process.env.NODE_ENV === 'development') {
+    // 本地开发构建配置（不混淆压缩）
+    return merge({}, baseConfig, devConfig)
+  }
+  // 生产构建配置（默认开启压缩混淆等）
+  return merge({}, baseConfig, prodConfig)
+})
