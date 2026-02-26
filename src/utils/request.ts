@@ -3,7 +3,7 @@ import { message } from 'antd'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 10000,
+  timeout: 3000,
 })
 
 request.interceptors.request.use(

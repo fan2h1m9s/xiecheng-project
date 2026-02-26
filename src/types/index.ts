@@ -17,6 +17,7 @@ export interface User {
   id: number
   userAccount: string
   userName?: string
+  realName?: string
   userType: UserType
   userPhone?: string
   userEmail?: string
@@ -38,6 +39,9 @@ export interface Hotel {
   hotelStatus?: HotelStatus
   hotelRemark?: string
   userId?: number
+  latitude?: number | string
+  longitude?: number | string
+  hotelRegion?: number
 }
 
 export interface RoomType {
@@ -45,6 +49,7 @@ export interface RoomType {
   roomTypeName: string
   roomTypeDescription?: string
   roomTypePrice?: number
+  roomTypeRest?: number
   hotelId: number
 }
 
@@ -55,6 +60,8 @@ export interface Room {
   roomStatus?: number
   roomTypeId: number
   roomArea?: number
+  roomPrice?: number
+  hotelId: number
 }
 
 export interface LoginForm {
@@ -68,4 +75,23 @@ export interface RegisterForm {
   confirmPassword: string
   userName?: string
   userType: UserType
+}
+
+export enum OrderStatus {
+  UNPAID = 0,
+  PAID = 1,
+  COMPLETED = 2,
+  CANCELLED = 3,
+  REFUNDED = 4
+}
+
+export interface Order {
+  id: number
+  orderNumber: string
+  orderStatus: OrderStatus
+  orderTotalPrice: number
+  orderCreateTime: string
+  userId: number
+  orderCheckInTime: string
+  orderCheckOutTime: string
 }

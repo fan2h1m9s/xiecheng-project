@@ -50,8 +50,13 @@ export default function HotelList() {
           await deleteHotel(id)
           message.success('删除成功')
           fetchHotels()
-        } catch (error) {
+        } catch (error: any) {
           console.error('删除失败:', error)
+          if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+            message.error('删除请求超时，请检查网络连接或稍后重试')
+          } else {
+            message.error(error.response?.data?.error || '删除失败')
+          }
         }
       },
     })
