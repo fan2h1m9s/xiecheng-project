@@ -1,6 +1,7 @@
 import { View, Text, Input } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import { useState, useEffect } from 'react'
+import { request } from '../../services/request'
 import './index.scss'
 
 export default function LoginPage() {
@@ -77,7 +78,7 @@ export default function LoginPage() {
     if (loading) return
     
     if (!validateForm()) {
-      Taro.showToast({
+      Taro.showToast({ 
         title: '请完善登录信息',
         icon: 'none',
         duration: 2000
@@ -88,17 +89,38 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // 模拟登录请求
-      await new Promise(resolve => setTimeout(resolve, 1500))
+      // 调用后端登录接口
+      const response = await request<{
+        success: boolean
+        message: string
+        user: {
+          id: number
+          userAccount: string
+          userName: string
+          userType: number
+        }
+        token: string
+      }>({
+        url: '/api/users/login',
+        method: 'POST',
+        data: {
+          userAccount: account,
+          userPassword: password
+        }
+      })
 
-      // 保存用户信息
-      const user = { 
-        account, 
-        role,
+      // 保存用户信息和token
+      const user = {
+        id: response.user.id,
+        account: response.user.userAccount,
+        userName: response.user.userName,
+        role: response.user.userType === 3 ? 'hotel' : 'user',
+        userType: response.user.userType,
         loginTime: new Date().toISOString()
       }
       
       Taro.setStorageSync('user', user)
+      Taro.setStorageSync('token', response.token)
       
       // 记住账号功能
       if (rememberMe) {
@@ -108,7 +130,7 @@ export default function LoginPage() {
       }
 
       Taro.showToast({
-        title: '登录成功',
+        title: response.message || '登录成功',
         icon: 'success',
         duration: 1500
       })
@@ -123,10 +145,10 @@ export default function LoginPage() {
         })
       }, 1500)
 
-    } catch (error) {
+    } catch (error: any) {
       setLoading(false)
       Taro.showToast({
-        title: '登录失败，请重试',
+        title: error.message || '登录失败，请重试',
         icon: 'error',
         duration: 2000
       })
@@ -144,40 +166,49 @@ export default function LoginPage() {
 
     setLoading(true)
     try {
-      // 模拟网络延迟
-      await new Promise(resolve => setTimeout(resolve, 1200))
+      // 调用后端注册接口
+      const response = await request<{
+        user: {
+          id: number
+          userAccount: string
+          userName: string
+          userType: number
+        }
+        token: string
+      }>({
+        url: '/api/users/register',
+        method: 'POST',
+        data: {
+          userAccount: account,
+          userPassword: password,
+          userName: account, // 使用账号作为默认用户名
+          userType: role === 'hotel' ? 3 : 1 // 1: 普通用户, 3: 酒店管理员
+        }
+      })
 
-      // 从本地获取 users 列表（模拟后端）
-      const existing: any[] = Taro.getStorageSync('users') || []
-      const exists = existing.find(u => u.account === account)
-      if (exists) {
-        setLoading(false)
-        setErrors((prev: any) => ({ ...prev, account: '该账号已被注册' }))
-        Taro.showToast({ title: '账号已存在，请直接登录', icon: 'none' })
-        return
+      // 保存用户信息和token
+      const user = {
+        id: response.user.id,
+        account: response.user.userAccount,
+        userName: response.user.userName,
+        role: response.user.userType === 3 ? 'hotel' : 'user',
+        userType: response.user.userType,
+        loginTime: new Date().toISOString()
       }
-
-      const newUser = {
-        account,
-        password,
-        role,
-        phone: phone || null,
-        email: email || null,
-        registerTime: new Date().toISOString()
-      }
-
-      existing.push(newUser)
-      Taro.setStorageSync('users', existing)
-      // 自动登录注册用户
-      Taro.setStorageSync('user', { account: newUser.account, role: newUser.role, loginTime: new Date().toISOString() })
+      
+      Taro.setStorageSync('user', user)
+      Taro.setStorageSync('token', response.token)
 
       Taro.showToast({ title: '注册并登录成功', icon: 'success' })
       setTimeout(() => {
         Taro.reLaunch({ url: '/pages/index/index' })
       }, 800)
-    } catch (err) {
+    } catch (error: any) {
       setLoading(false)
-      Taro.showToast({ title: '注册失败，请重试', icon: 'none' })
+      if (error.message === '账号已存在') {
+        setErrors((prev: any) => ({ ...prev, account: '该账号已被注册' }))
+      }
+      Taro.showToast({ title: error.message || '注册失败，请重试', icon: 'none' })
     }
   }
 
