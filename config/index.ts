@@ -95,6 +95,17 @@ import prodConfig from './prod'
       },
       webpackChain(chain) {
         //chain.resolve.plugin('tsconfig-paths').use(TsconfigPathsPlugin)
+        // 为需要的 node 内置模块添加 browser-friendly 的 polyfill
+        // 这些包需要在项目中安装：crypto-browserify、stream-browserify、buffer
+        // Provide Buffer 全局变量供某些库使用
+        // 注意：如果未安装这些依赖，请先通过 npm/yarn/pnpm 安装
+        const webpack = require('webpack')
+        chain.resolve.fallback.merge({
+          crypto: require.resolve('crypto-browserify'),
+          stream: require.resolve('stream-browserify'),
+          buffer: require.resolve('buffer/')
+        })
+        chain.plugin('provide').use(webpack.ProvidePlugin, [{ Buffer: ['buffer', 'Buffer'] }])
       }
     },
     rn: {

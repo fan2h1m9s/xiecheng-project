@@ -418,3 +418,52 @@
     transform: translateY(-4rpx);
   }
 }
+
+/* 底部导航样式 */
+.login-status {
+  text-align: center;
+  padding: 8rpx 0;
+  color: #333;
+  font-size: 24rpx;
+}
+
+.bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 50px;
+  display: flex;
+  border-top: 1px solid #eee;
+  background: #fff;
+  align-items: center;
+  justify-content: space-around;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  font-size: 20px;
+  min-width: 44px;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.nav-item .nav-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+}
+
+.nav-item.active,
+.nav-item:active {
+  color: #007AFF;
+}
+
+.nav-item.active .nav-icon,
+.nav-item:active .nav-icon {
+  color: #007AFF;
+}

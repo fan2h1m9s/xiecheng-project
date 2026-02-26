@@ -330,6 +330,20 @@ export default function Index() {
     handleLocation()
   })
 
+  // 登录状态（从本地存储读取）
+  const [currentUser, setCurrentUser] = useState<any>(null)
+
+  // 每次页面显示时读取登录信息，确保从登录页返回后状态更新
+  useDidShow(() => {
+    try {
+      const stored = Taro.getStorageSync('user')
+      if (stored) setCurrentUser(stored)
+      else setCurrentUser(null)
+    } catch (e) {
+      setCurrentUser(null)
+    }
+  })
+
   return (
     <View className='index'>
       {/* 顶部 Banner 广告 */}
@@ -407,6 +421,22 @@ export default function Index() {
         {/* 查询按钮 */}
         <View className='search-button' onClick={handleSearch}>
           <Text className='button-text'>查询</Text>
+        </View>
+      </View>
+
+      {/* 登录状态展示（位于底部导航之上）+ 底部导航 */}
+      {currentUser && (
+        <View className='login-status'>已登录: {currentUser.account} {currentUser.role ? `(${currentUser.role})` : ''}</View>
+      )}
+
+      <View className='bottom-nav'>
+        <View className={`nav-item active`} onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>
+          <Text className='nav-icon'>🏠</Text>
+          <Text className='nav-label'>首页</Text>
+        </View>
+        <View className='nav-item' onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}>
+          <Text className='nav-icon'>🔐</Text>
+          <Text className='nav-label'>登录</Text>
         </View>
       </View>
     </View>
