@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/Nightin-g/hotel-server#readme",
   "dependencies": {
-    "@elastic/elasticsearch": "^9.3.2",
+    "@elastic/elasticsearch": "^7.17.4",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",

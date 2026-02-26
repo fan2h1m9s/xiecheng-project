@@ -124,13 +124,13 @@ export class ElasticsearchService {
       } as any);
 
       let total = 0;
-      if (result.hits.total) {
-        total = typeof result.hits.total === 'number' ? result.hits.total : (result.hits.total as any).value;
+      if (result.body.hits.total) {
+        total = typeof result.body.hits.total === 'number' ? result.body.hits.total : (result.body.hits.total as any).value;
       }
 
       return {
         total,
-        hotels: result.hits.hits.map((hit: any) => hit._source)
+        hotels: result.body.hits.hits.map((hit: any) => hit._source)
       };
     } catch (error) {
       console.error('搜索酒店失败:', error);
