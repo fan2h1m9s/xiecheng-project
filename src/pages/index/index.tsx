@@ -430,13 +430,19 @@ export default function Index() {
       )}
 
       <View className='bottom-nav'>
-        <View className={`nav-item active`} onClick={() => Taro.reLaunch({ url: '/pages/index/index' })}>
+        <View className={`nav-item active`} onClick={() => {
+          console.log('点击首页');
+          Taro.reLaunch({ url: '/pages/index/index' });
+        }}>
           <Text className='nav-icon'>🏠</Text>
           <Text className='nav-label'>首页</Text>
         </View>
-        <View className='nav-item' onClick={() => Taro.navigateTo({ url: '/pages/login/index' })}>
-          <Text className='nav-icon'>🔐</Text>
-          <Text className='nav-label'>登录</Text>
+        <View className='nav-item' onClick={() => {
+          console.log('点击主页');
+          Taro.navigateTo({ url: '/pages/profile/index' });
+        }}>
+          <Text className='nav-icon'>👤</Text>
+          <Text className='nav-label'>主页</Text>
         </View>
       </View>
     </View>
