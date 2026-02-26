@@ -1098,7 +1098,7 @@
   | 参数名 | 类型 | 必填 | 描述 |
   | --- | --- | --- | --- |
   | userId | number | 是 | 用户 ID |
-  | orderStatus | number | 是 | 订单状态（1: 待支付, 2: 已支付, 3: 已完成, 4: 已取消） |
+  | orderStatus | number | 是 | 订单状态（0: 待付款, 1: 已付款待入住, 2: 已入住待退房, 3: 已退房, 4: 已取消） |
   | orderTotalPrice | number | 是 | 订单总价 |
   | orderCheckInTime | string | 是 | 入住时间（ISO 格式） |
   | orderCheckOutTime | string | 是 | 退房时间（ISO 格式） |
@@ -1173,7 +1173,7 @@
       "id": 1,
       "orderNumber": "ORD202401010001",
       "userId": 1,
-      "orderStatus": 3,
+      "orderStatus": 2,
       "orderTotalPrice": 400,
       "orderCreateTime": "2024-01-01T00:00:00Z",
       "orderCheckInTime": "2024-01-02T14:00:00Z",
@@ -1205,7 +1205,7 @@
       "id": 1,
       "orderNumber": "ORD202401010001",
       "userId": 1,
-      "orderStatus": 4,
+      "orderStatus": 3,
       "orderTotalPrice": 400,
       "orderCreateTime": "2024-01-01T00:00:00Z",
       "orderCheckInTime": "2024-01-02T14:00:00Z",
@@ -1236,7 +1236,7 @@
       "id": 1,
       "orderNumber": "ORD202401010001",
       "userId": 1,
-      "orderStatus": 5,
+      "orderStatus": 4,
       "orderTotalPrice": 400,
       "orderCreateTime": "2024-01-01T00:00:00Z",
       "orderCheckInTime": "2024-01-02T14:00:00Z",
