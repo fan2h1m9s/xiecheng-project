@@ -26,7 +26,7 @@ export class Hotel {
   hotelStars!: number;
 
   @Column({ name: 'hotel_tele', length: 20, nullable: true })
-  hotelPhone!: string;
+  hotelTele!: string;
 
   @Column({ name: 'hotel_dis', type: 'text', nullable: true })
   hotelDis!: string;
